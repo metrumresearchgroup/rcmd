@@ -15,7 +15,7 @@ import (
 func main() {
 	//startR_example()
 	//runR_expression()
-	runRWithOutput_exampleCancel()
+	runR_exampleCancel()
 }
 
 func startR_example() {
@@ -31,42 +31,42 @@ func startR_example2() {
 }
 
 func runR_expression() {
-	res, err := rcmd.RunR(rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave"})
+	res, err := rcmd.RunRWithOutput(rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave"})
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(strings.Join(rp.ScanLines(res), "\n"))
 }
 func runRWithOutput_example() {
-	res, err := rcmd.RunRWithOutput(context.Background(),rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
+	res, err := rcmd.RunR(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(res)
 	fmt.Println("----with prefix----")
-	res, err = rcmd.RunRWithOutput(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig(rcmd.WithPrefix("custom-prefix:")))
+	res, err = rcmd.RunR(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig(rcmd.WithPrefix("custom-prefix:")))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(res)
 }
-func runRWithOutput_exampleTimeout() {
-	ctx, _ := context.WithTimeout(context.Background(), 1 * time.Second)
-	res, err := rcmd.RunRWithOutput(ctx,rcmd.NewRSettings("R"), "", []string{"-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
+func runR_exampleTimeout() {
+	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	res, err := rcmd.RunR(ctx, rcmd.NewRSettings("R"), "", []string{"-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(res)
 }
 
-func runRWithOutput_exampleCancel() {
+func runR_exampleCancel() {
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	// fire off 3 go routines where the 2nd fails, and all existing should stop processing
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		res, err := rcmd.RunRWithOutput(ctx,rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
+		res, err := rcmd.RunR(ctx, rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
 
 		if err != nil {
 			panic(err)
@@ -75,7 +75,7 @@ func runRWithOutput_exampleCancel() {
 	}()
 	go func() {
 		defer wg.Done()
-		res, err := rcmd.RunRWithOutput(ctx,rcmd.NewRSettings("R"), "", []string{"-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive"}, *rcmd.NewRunConfig())
+		res, err := rcmd.RunR(ctx, rcmd.NewRSettings("R"), "", []string{"-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive"}, *rcmd.NewRunConfig())
 		if err != nil {
 			log.Error("goroutine 2 error:", err)
 			log.Warn("cancelling ongoing work...")
@@ -86,7 +86,7 @@ func runRWithOutput_exampleCancel() {
 	}()
 	go func() {
 		defer wg.Done()
-		res, err := rcmd.RunRWithOutput(ctx,rcmd.NewRSettings("R"), "", []string{"-e", "Sys.sleep(1); 2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
+		res, err := rcmd.RunR(ctx, rcmd.NewRSettings("R"), "", []string{"-e", "Sys.sleep(1); 2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
 		if err != nil {
 			log.Error("goroutine 3 error:", err)
 		}
@@ -95,9 +95,9 @@ func runRWithOutput_exampleCancel() {
 	wg.Wait()
 	fmt.Println("completed everything....")
 }
-func runRWithOutput_examplepkg() {
+func runR_examplepkg() {
 	dir, _ := homedir.Expand("~/metrum/metrumresearchgroup/rbabylon")
-	res, err := rcmd.RunRWithOutput(context.Background(),rcmd.NewRSettings("R"), dir, []string{"-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive"}, *rcmd.NewRunConfig())
+	res, err := rcmd.RunR(context.Background(), rcmd.NewRSettings("R"), dir, []string{"-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive"}, *rcmd.NewRunConfig())
 	if err != nil {
 		panic(err)
 	}

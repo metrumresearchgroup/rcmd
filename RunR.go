@@ -47,6 +47,7 @@ func WithScript(s bool) RunOption {
 		r.Script = s
 	}
 }
+
 // WithLineNumbers controls whether to keep the leading line numbers
 // R includes in all outputs under the format [<num>] <output>
 func WithLineNumbers(ln bool) RunOption {
@@ -62,6 +63,7 @@ func WithStdOut(w io.Writer) RunOption {
 		r.Stdout = w
 	}
 }
+
 // WithStdErr Sets the writer to send results sent to stderr
 // for example to suppress stderr could provide `WithStdOut(ioutil.Discard)`
 func WithStdErr(w io.Writer) RunOption {
@@ -77,6 +79,7 @@ func WithStdin(r io.Reader) RunOption {
 		rc.Stdin = r
 	}
 }
+
 // WithPrefix sets a prefix string before any message is sent to the stdout/stderr writers
 // This is useful when printing concurrent results out and want to differentiate
 // where messages are coming from
@@ -125,9 +128,9 @@ func StartR(
 	return cmd.Run()
 }
 
-// RunRWithOutput runs a non-interactive R command and streams back the results of
+// RunR runs a non-interactive R command and streams back the results of
 // the stderr and stdout to the RunCfg writers
-func RunRWithOutput(
+func RunR(
 	ctx context.Context,
 	rs RSettings,
 	dir string,
@@ -191,7 +194,7 @@ func RunRWithOutput(
 }
 
 // RunR runs a non-interactive R command and returns the combined output
-func RunR(
+func RunRWithOutput(
 	rs RSettings,
 	dir string,
 	cmdArgs []string,

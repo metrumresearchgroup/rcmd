@@ -52,7 +52,7 @@ func (rs RSettings) R(os string, script bool) string {
 // This will keep any program using rs from needing to shell out multiple times
 func getRVersion(rs *RSettings) RVersion {
 	if rs.Version.ToString() == "0.0" {
-		res, err := RunR(*rs, "", []string{"--version", "--vanilla"})
+		res, err := RunRWithOutput(*rs, "", []string{"--version", "--vanilla"})
 		if err != nil {
 			log.Fatal("error getting R version info")
 			return RVersion{}
