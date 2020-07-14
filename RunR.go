@@ -42,6 +42,7 @@ func NewRunConfig(opts ...RunOption) *RunCfg {
 	return cfg
 }
 
+// WithScript sets whether the output will be a call to R or Rscript
 func WithScript(s bool) RunOption {
 	return func(r *RunCfg) {
 		r.Script = s
@@ -129,7 +130,8 @@ func StartR(
 }
 
 // RunR runs a non-interactive R command and streams back the results of
-// the stderr and stdout to the RunCfg writers
+// the stderr and stdout to the RunCfg writers.
+// RunR returns the exit code of the process and and error, if relevant
 func RunR(
 	ctx context.Context,
 	rs RSettings,
@@ -193,7 +195,7 @@ func RunR(
 	return cmd.ProcessState.ExitCode(), nil
 }
 
-// RunR runs a non-interactive R command and returns the combined output
+// RunRWithOutput runs a non-interactive R command and returns the combined output
 func RunRWithOutput(
 	rs RSettings,
 	dir string,
