@@ -19,19 +19,19 @@ func main() {
 }
 
 func startR_example() {
-	if err := rcmd.StartR(rcmd.NewRSettings("R"), "", []string{}, *rcmd.NewRunConfig()); err != nil {
+	if err := rcmd.StartR(context.Background(), rcmd.NewRSettings("R"), "", []string{}, *rcmd.NewRunConfig()); err != nil {
 		panic(err)
 	}
 }
 
 func startR_example2() {
-	if err := rcmd.StartR(rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "slave"}, *rcmd.NewRunConfig()); err != nil {
+	if err := rcmd.StartR(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "slave"}, *rcmd.NewRunConfig()); err != nil {
 		panic(err)
 	}
 }
 
 func runR_expression() {
-	res, err := rcmd.RunRWithOutput(rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave"})
+	res, err := rcmd.RunRWithOutput(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave"})
 	if err != nil {
 		panic(err)
 	}

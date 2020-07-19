@@ -5,21 +5,20 @@ import (
 	"strings"
 )
 
-// Append a name and value pair to the list as an Nvp object
-func (list *NvpList) Append(name, value string) {
+// NvpAppend a name and value pair to the list as an Nvp object
+func NvpAppend(list NvpList, name, value string) NvpList {
 	list.Pairs = append(list.Pairs, Nvp{Name: strings.Trim(name, " "), Value: strings.Trim(value, " ")})
+	return list
 }
 
-// AppendNvp append a string of name=value pair to the list as an Nvp object
-func (list *NvpList) AppendNvp(nvp string) {
+// NvpAppendPair append a string of name=value pair to the list as an Nvp object
+func NvpAppendPair(list NvpList, nvp string) NvpList {
 	b := strings.Split(nvp, "=")
-	if len(b) == 2 {
-		list.Append(b[0], b[1])
-	}
+	return NvpAppend(list, b[0], b[1])
 }
 
 // Get a value by name
-func (list *NvpList) Get(name string) (value string, exists bool) {
+func (list NvpList) Get(name string) (value string, exists bool) {
 	for _, pair := range list.Pairs {
 		if name == pair.Name {
 			return pair.Value, true
@@ -28,8 +27,8 @@ func (list *NvpList) Get(name string) (value string, exists bool) {
 	return "", false
 }
 
-// GetNvp an nvp by name
-func (list *NvpList) GetNvp(name string) (nvp Nvp, exists bool) {
+// GetPair an nvp by name
+func (list NvpList) GetPair(name string) (nvp Nvp, exists bool) {
 	for _, pair := range list.Pairs {
 		if name == pair.Name {
 			return pair, true
@@ -38,8 +37,8 @@ func (list *NvpList) GetNvp(name string) (nvp Nvp, exists bool) {
 	return Nvp{}, false
 }
 
-// Remove by name
-func (list *NvpList) Remove(name string) {
+// NvpRemove by name
+func NvpRemove(list NvpList, name string) NvpList {
 	n := -1
 	for i, pair := range list.Pairs {
 		if name == pair.Name {
@@ -50,10 +49,11 @@ func (list *NvpList) Remove(name string) {
 	if n >= 0 {
 		list.Pairs = append(list.Pairs[:n], list.Pairs[n+1:]...)
 	}
+	return list
 }
 
-// Update a value by name
-func (list *NvpList) Update(name string, value string) (nvp Nvp, exists bool) {
+// NvpUpdate a value by name and tell whether there was a value to update
+func NvpUpdate(list NvpList, name string, value string) (NvpList, bool) {
 	n := -1
 	for i, pair := range list.Pairs {
 		if name == pair.Name {
@@ -63,12 +63,12 @@ func (list *NvpList) Update(name string, value string) (nvp Nvp, exists bool) {
 
 	if n >= 0 {
 		list.Pairs[n].Value = value
-		return list.Pairs[n], true
+		return list, true
 	}
-	return Nvp{}, false
+	return list, false
 }
 
 // GetString returns a string as name=value
-func (nvp *Nvp) GetString(name string) (value string) {
+func (nvp Nvp) GetString(name string) (value string) {
 	return fmt.Sprintf("%s=%s", nvp.Name, nvp.Value)
 }

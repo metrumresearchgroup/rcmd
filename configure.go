@@ -18,7 +18,7 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 	for _, p := range rs.EnvVars.Pairs {
 		_, exists := envList.Get(p.Name)
 		if !exists {
-			envList.Append(p.Name, p.Value)
+			envList = NvpAppend(envList, p.Name, p.Value)
 		}
 	}
 	// system env vars generally
@@ -48,7 +48,7 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 				}
 			}
 			// if exists would be custom to the package hence should not accept the system env
-			envList.Append(evs[0], evs[1])
+			envList = NvpAppend(envList, evs[0], evs[1])
 		}
 	}
 
@@ -63,11 +63,11 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 			"error": err,
 		}).Warn("error making temporary directory while overriding R_LIBS_USER for install.")
 	}
-	envList.Append("R_LIBS_USER", tmpdir)
+	envList = NvpAppend(envList, "R_LIBS_USER", tmpdir)
 
 	ok, lp := rs.LibPathsEnv()
 	if ok {
-		envList.AppendNvp(lp)
+		envList = NvpAppendPair(envList, lp)
 	}
 
 	for _, p := range envList.Pairs {
@@ -77,22 +77,22 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 
 	return envVars
 }
-
-// Returns a constant set of env vars to be hidden in logs.
-// Calling function may pass in additional values to include in the censor list.
-func censoredEnvVars(add []string) map[string]string {
-	censoredVarsMap := map[string]string{
-		"GITHUB_TOKEN":      "GITHUB_TOKEN",
-		"GITHUB_PAT":        "GITHUB_PAT",
-		"GHE_TOKEN":         "GHE_TOKEN",
-		"GHE_PAT":           "GHE_PAT",
-		"AWS_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID",
-		"AWS_SECRET_KEY":    "AWS_SECRET_KEY",
-	}
-	if add != nil {
-		for _, v := range add {
-			censoredVarsMap[strings.ToUpper(v)] = strings.ToUpper(v) // append(censoredVars, strings.ToUpper(v))
-		}
-	}
-	return censoredVarsMap
-}
+//
+//// Returns a constant set of env vars to be hidden in logs.
+//// Calling function may pass in additional values to include in the censor list.
+//func censoredEnvVars(add []string) map[string]string {
+//	censoredVarsMap := map[string]string{
+//		"GITHUB_TOKEN":      "GITHUB_TOKEN",
+//		"GITHUB_PAT":        "GITHUB_PAT",
+//		"GHE_TOKEN":         "GHE_TOKEN",
+//		"GHE_PAT":           "GHE_PAT",
+//		"AWS_ACCESS_KEY_ID": "AWS_ACCESS_KEY_ID",
+//		"AWS_SECRET_KEY":    "AWS_SECRET_KEY",
+//	}
+//	if add != nil {
+//		for _, v := range add {
+//			censoredVarsMap[strings.ToUpper(v)] = strings.ToUpper(v) // append(censoredVars, strings.ToUpper(v))
+//		}
+//	}
+//	return censoredVarsMap
+//}

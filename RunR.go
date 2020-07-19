@@ -93,6 +93,7 @@ func WithPrefix(prefix string) RunOption {
 // StartR launches an interactive R console given the same
 // configuration as a specific package.
 func StartR(
+	ctx context.Context,
 	rs RSettings,
 	dir string, // this should be put into RSettings
 	cmdArgs []string,
@@ -113,7 +114,8 @@ func StartR(
 	// if cs.Vanilla {
 	// 	cmdArgs = append([]string{"--vanilla"}, cmdArgs...)
 	// }
-	cmd := exec.Command(
+	cmd := exec.CommandContext(
+		ctx,
 		rs.R(runtime.GOOS, rc.Script),
 		cmdArgs...,
 	)
@@ -197,13 +199,15 @@ func RunR(
 
 // RunRWithOutput runs a non-interactive R command and returns the combined output
 func RunRWithOutput(
+	ctx context.Context,
 	rs RSettings,
 	dir string,
 	cmdArgs []string,
 ) ([]byte, error) {
 	envVars := configureEnv(os.Environ(), rs)
 	rpath := rs.R(runtime.GOOS, false)
-	cmd := exec.Command(
+	cmd := exec.CommandContext(
+		ctx,
 		rpath,
 		cmdArgs...,
 	)

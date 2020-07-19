@@ -181,7 +181,7 @@ func TestRMethod(t *testing.T) {
 	for _, tt := range rTests {
 		if tt.platform == runtime.GOOS {
 			rs := NewRSettings(tt.rpath)
-			r := rs.R(tt.platform)
+			r := rs.R(tt.platform, false)
 			assert.Equal(t, tt.expected, r, fmt.Sprintf("R not equal to <%s>. %s", tt.expected, tt.message))
 		}
 	}
