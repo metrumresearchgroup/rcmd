@@ -3,7 +3,6 @@ module github.com/metrumresearchgroup/rcmd
 go 1.14
 
 require (
-	github.com/dpastoor/goutils v1.2.0
 	github.com/fatih/structs v1.1.0
 	github.com/fatih/structtag v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
