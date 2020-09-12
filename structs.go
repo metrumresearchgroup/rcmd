@@ -47,28 +47,24 @@ type InstallArgs struct {
 	Library string `rcmd:"library=%s,fmt"`
 }
 
-// PackageCache provides metadata about the package cache
-// Each repository should be a subfolder from the BaseDir
-// with separate folders for binary and source packages
-type PackageCache struct {
-	BaseDir string
-}
-
-// InstallRequest provides information about the installation request
-type InstallRequest struct {
-	Package      string
-	Path         string
-	IsBinary     bool
-	Cache        PackageCache
-	Args         InstallArgs
-	ExecSettings ExecSettings
-	RSettings    RSettings
-}
-
-// InstallResult provides information about the Job in the queue
-type InstallResult struct {
-	Result  CmdResult
-	Package string
+type CheckArgs struct {
+	NoClean          bool `rcmd:"no-clean"`
+	NoInstall        bool `rcmd:"no-install"`
+	NoTests          bool `rcmd:"no-tests"`
+	NoManual         bool `rcmd:"no-manual"`
+	NoVignettes      bool `rcmd:"no-vignettes"`
+	NoBuildVignettes bool `rcmd:"no-build-vignettes"`
+	IgnoreVignettes  bool `rcmd:"ignore-vignettes"`
+	InstallTests     bool `rcmd:"install-tests"`
+	Multiarch        bool `rcmd:"multiarch"`
+	NoMultiarch      bool `rcmd:"no-multiarch"`
+	//  Output directory for output, default is current directory.
+	//           Logfiles, R output, etc. will be placed in 'pkg.Rcheck'
+	//           in this directory, where 'pkg' is the name of the
+	//           checked package
+	Output string `rcmd:"output=%s,fmt"`
+	//  library directory used for test installation of packages (default is outdir)
+	Library string `rcmd:"library=%s,fmt"`
 }
 
 // Nvp name-value pair, each of type string

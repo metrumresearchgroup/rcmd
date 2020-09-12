@@ -1,21 +1,20 @@
 package rcmd
+
 //
-//import (
-//	"io/ioutil"
-//	"runtime"
-//	"strings"
-//	"testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
 //
-//	"github.com/stretchr/testify/assert"
-//)
-//
-//type configureArgsTestCase struct {
-//	context string
-//	in      string
-//	// mocked system environment variables per os.Environ()
-//	sysEnv   []string
-//	expected []string
-//}
+type configureArgsTestCase struct {
+	context string
+	// mocked system environment variables per os.Environ()
+	input    []string
+	expected []string
+}
+
 //
 //// Utility functions
 //func checkEnvVarsValid(t *testing.T, testCase configureArgsTestCase, actualResults []string) {
@@ -156,42 +155,59 @@ package rcmd
 //}
 //
 //// Since the other tests are failing and we haven't addressed them yet, I'm just breaking this one out into its own group.
-//func TestConfigureArgs2(t *testing.T) {
-//	defaultRS := NewRSettings("")
-//	// there should always be at least one libpath
-//	defaultRS.LibPaths = []string{"path/to/install/lib"}
-//	var installArgsTests = []configureArgsTestCase{
-//		{
-//			"System contains sensitive information",
-//			"",
-//			[]string{
-//				"R_LIBS_USER=original/path",
-//				"GITHUB_PAT=should_get_hidden1",
-//				"ghe_token=should_get_hidden2",
-//				"ghe_PAT=should_get_hidden3",
-//				"github_token=should_get_hidden4",
-//				"AWS_ACCESS_KEY_ID=should_get_hidden5",
-//				"AWS_SECRET_KEY=should_get_hidden6",
-//			},
-//			[]string{
-//				"GITHUB_PAT=**HIDDEN**",
-//				"ghe_token=**HIDDEN**",
-//				"ghe_PAT=**HIDDEN**",
-//				"github_token=**HIDDEN**",
-//				"AWS_ACCESS_KEY_ID=**HIDDEN**",
-//				"AWS_SECRET_KEY=**HIDDEN**",
-//				"R_LIBS_SITE=path/to/install/lib",
-//				"R_LIBS_USER=SHOULD_BE_TMP_DIR",
-//			},
-//		},
-//	}
-//	for _, tt := range installArgsTests {
-//		actual := configureEnv(tt.sysEnv, defaultRS)
-//		//assert.Equal(tt.expected, actual, fmt.Sprintf("%s, test num: %v", tt.context, i+1))
-//
-//		checkEnvVarsValid(t, tt, actual)
-//	}
-//}
+func TestConfigureArgs(t *testing.T) {
+	var installArgsTests = []configureArgsTestCase{
+		{
+			"variety of spellings",
+			[]string{
+				"R_LIBS_USER=some/path",
+				"GITHUB_PAT=should_get_hidden1",
+				"ghe_token=should_get_hidden2",
+				"ghe_PAT=should_get_hidden3",
+				"github_token=should_get_hidden4",
+				"AWS_ACCESS_KEY_ID=should_get_hidden5",
+				"AWS_SECRET_KEY=should_get_hidden6",
+				"ADDL_ARG=could-be-secret",
+			},
+			[]string{
+				"R_LIBS_USER=some/path",
+				"GITHUB_PAT=***HIDDEN***",
+				"ghe_token=***HIDDEN***",
+				"ghe_PAT=***HIDDEN***",
+				"github_token=***HIDDEN***",
+				"AWS_ACCESS_KEY_ID=***HIDDEN***",
+				"AWS_SECRET_KEY=***HIDDEN***",
+				"ADDL_ARG=could-be-secret",
+			},
+		},
+	}
+	for _, tt := range installArgsTests {
+		actual := censorEnvVars(tt.input)
+		assert.Equal(t, tt.expected, actual, tt.context)
+	}
+}
+func TestConfigureArgsAddl(t *testing.T) {
+	var installArgsTests = []configureArgsTestCase{
+		{
+			"additional hidden",
+			[]string{
+				"R_LIBS_USER=some/path",
+				"GITHUB_PAT=should_get_hidden1",
+				"ADDL_ARG=could-be-secret",
+			},
+			[]string{
+				"R_LIBS_USER=some/path",
+				"GITHUB_PAT=***HIDDEN***",
+				"ADDL_ARG=***HIDDEN***",
+			},
+		},
+	}
+	for _, tt := range installArgsTests {
+		actual := censorEnvVars(tt.input, "ADDL_ARG")
+		assert.Equal(t, tt.expected, actual, tt.context)
+	}
+}
+
 ////
 ////func TestCensoredEnvVars(t *testing.T) {
 ////	tests := map[string]struct {

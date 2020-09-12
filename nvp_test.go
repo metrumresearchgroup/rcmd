@@ -41,7 +41,7 @@ func TestAppendNvp(t *testing.T) {
 	}
 	var nvpList NvpList
 	for _, tt := range tests {
-		nvpList = NvpAppendPair(nvpList, tt.name + "=" + tt.value)
+		nvpList = NvpAppendPair(nvpList, tt.name+"="+tt.value)
 		assert.Equal(t, tt.name, nvpList.Pairs[0].Name, fmt.Sprintf("Fail: %s", tt.context))
 		assert.Equal(t, tt.value, nvpList.Pairs[0].Value, fmt.Sprintf("Fail: %s", tt.context))
 	}
@@ -207,7 +207,7 @@ func TestRemove_First(t *testing.T) {
 	}
 	var nvpList NvpList
 	for _, tt := range tests {
-		nvpList = NvpAppend(nvpList,tt.name, tt.value)
+		nvpList = NvpAppend(nvpList, tt.name, tt.value)
 	}
 	nvpList = NvpRemove(nvpList, "name1")
 	assert.Equal(t, 2, len(nvpList.Pairs), fmt.Sprintf("Fail: remove"))
@@ -241,7 +241,7 @@ func TestRemove_Last(t *testing.T) {
 	}
 	var nvpList NvpList
 	for _, tt := range tests {
-		nvpList = NvpAppend(nvpList,tt.name, tt.value)
+		nvpList = NvpAppend(nvpList, tt.name, tt.value)
 	}
 	nvpList = NvpRemove(nvpList, "name3")
 	assert.Equal(t, 2, len(nvpList.Pairs), fmt.Sprintf("Fail: remove"))

@@ -15,7 +15,7 @@ import (
 const defaultFailedCode = 1
 const defaultSuccessCode = 0
 
-// RunOpts
+// RunCfg contains the configuration for use when executing a run
 type RunCfg struct {
 	Stdout           io.Writer
 	Stderr           io.Writer
@@ -25,6 +25,7 @@ type RunCfg struct {
 	Script           bool
 }
 
+// RunOption are specific run option funcs to change configuration
 type RunOption func(*RunCfg)
 
 func NewRunConfig(opts ...RunOption) *RunCfg {
@@ -106,7 +107,7 @@ func StartR(
 		log.Fields{
 			"cmdArgs":   cmdArgs,
 			"RSettings": rs,
-			"env":       envVars,
+			"env":       censorEnvVars(envVars),
 		}).Trace("command args")
 
 	// --vanilla is a command for R and should be specified before the CMD, eg
@@ -160,8 +161,7 @@ func RunR(
 	}
 	err = cmd.Start()
 	if err != nil {
-		fmt.Println("error starting cmd")
-		panic(err)
+		return -999, err
 	}
 	stdoutScanner := bufio.NewScanner(stdoutPipe) // Notice that this is not in a loop
 	stderrScanner := bufio.NewScanner(stderrPipe) // Notice that this is not in a loop
