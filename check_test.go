@@ -30,6 +30,10 @@ func TestCheckArgs(t *testing.T) {
 			CheckArgs{Output: "some/dir", Library: "some/other/dir"},
 			[]string{"--output=some/dir", "--library=some/other/dir"},
 		},
+		{
+			CheckArgs{AsCran: true},
+			[]string{"--as-cran"},
+		},
 
 	}
 	for _, tt := range tests {

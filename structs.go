@@ -58,6 +58,7 @@ type CheckArgs struct {
 	InstallTests     bool `rcmd:"install-tests"`
 	Multiarch        bool `rcmd:"multiarch"`
 	NoMultiarch      bool `rcmd:"no-multiarch"`
+	AsCran			 bool `rcmd:"as-cran"`
 	//  Output directory for output, default is current directory.
 	//           Logfiles, R output, etc. will be placed in 'pkg.Rcheck'
 	//           in this directory, where 'pkg' is the name of the
