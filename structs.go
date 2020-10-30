@@ -20,7 +20,10 @@ type RVersion struct {
 }
 
 // RSettings controls settings related to managing libraries
+// if AsUser is set, R will be run as the user would launch from their normal session
+// with no interception/injection of library paths or environment variables for R_LIBS_SITE and R_LIBS_USER
 type RSettings struct {
+	AsUser   bool     `json:"as_user,omitempty"`
 	Version  RVersion `json:"r_version,omitempty"`
 	LibPaths []string `json:"lib_paths,omitempty"`
 	RPath    string   `json:"rpath,omitempty"`
@@ -58,7 +61,7 @@ type CheckArgs struct {
 	InstallTests     bool `rcmd:"install-tests"`
 	Multiarch        bool `rcmd:"multiarch"`
 	NoMultiarch      bool `rcmd:"no-multiarch"`
-	AsCran			 bool `rcmd:"as-cran"`
+	AsCran           bool `rcmd:"as-cran"`
 	//  Output directory for output, default is current directory.
 	//           Logfiles, R output, etc. will be placed in 'pkg.Rcheck'
 	//           in this directory, where 'pkg' is the name of the

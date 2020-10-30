@@ -41,11 +41,11 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 			// not be representative of the hierarchy specified
 			// in Library/Libpaths in the pkgr configuration
 			// we only want R_LIBS_SITE set to control all relevant library paths for the user to
-			if evs[0] == "R_LIBS_USER" {
+			if !rs.AsUser && evs[0] == "R_LIBS_USER" {
 				log.WithField("path", evs[1]).Debug("overriding system R_LIBS_USER")
 				continue
 			}
-			if evs[0] == "R_LIBS_SITE" {
+			if !rs.AsUser && evs[0] == "R_LIBS_SITE" {
 				log.WithField("path", evs[1]).Debug("overriding system R_LIBS_SITE")
 				continue
 			}
@@ -61,22 +61,24 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 		}
 	}
 
-	// Force R_LIBS_USER to be an empty dir so that we can be sure it won't get overridden by default R paths.
-	tmpdir := filepath.Join(
-		os.TempDir(),
-		randomString(12),
-	)
-	err := os.MkdirAll(tmpdir, 0777)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Warn("error making temporary directory while overriding R_LIBS_USER for install.")
-	}
-	envList = NvpAppend(envList, "R_LIBS_USER", tmpdir)
+	if !rs.AsUser {
+		tmpdir := filepath.Join(
+			os.TempDir(),
+			randomString(12),
+		)
+		err := os.MkdirAll(tmpdir, 0777)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err,
+			}).Warn("error making temporary directory while overriding R_LIBS_USER for install.")
+		}
+		// Force R_LIBS_USER to be an non-empty dir so that we can be sure it won't get overridden by default R paths.
+		envList = NvpAppend(envList, "R_LIBS_USER", tmpdir)
 
-	ok, lp := rs.LibPathsEnv()
-	if ok {
-		envList = NvpAppendPair(envList, lp)
+		ok, lp := rs.LibPathsEnv()
+		if ok {
+			envList = NvpAppendPair(envList, lp)
+		}
 	}
 
 	for _, p := range envList.Pairs {
