@@ -62,11 +62,7 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 	}
 
 	if !rs.AsUser {
-		tmpdir := filepath.Join(
-			os.TempDir(),
-			randomString(12),
-		)
-		err := os.MkdirAll(tmpdir, 0777)
+		tmpdir, err := os.MkdirTemp("", "")
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
