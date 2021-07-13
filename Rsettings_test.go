@@ -31,7 +31,7 @@ func TestLibPathsEnv(t *testing.T) {
 		},
 	}
 	for _, tt := range libPathTests {
-		ok, actual := tt.in.LibPathsEnv()
+		actual, ok := tt.in.LibPathsEnv()
 		if actual != "" && !ok {
 			t.Errorf("LibPaths present, should be ok")
 		}
@@ -103,7 +103,8 @@ http://www.gnu.org/licenses/.
 		},
 	}
 	for _, tt := range rVersionTests {
-		version, platform := parseVersionData(tt.data)
+		version, platform, err := parseVersionData(tt.data)
+		assert.Equal(t, err, nil, "err should be nil, was: %v", err)
 		assert.Equal(t, tt.version, version, fmt.Sprintf("Version not equal: %s", tt.message))
 		assert.Equal(t, tt.platform, platform, fmt.Sprintf("Platform not equal: %s", tt.message))
 	}
@@ -180,7 +181,8 @@ func TestRMethod(t *testing.T) {
 	}
 	for _, tt := range rTests {
 		if tt.platform == runtime.GOOS {
-			rs := NewRSettings(tt.rpath)
+			rs, err := NewRSettings(tt.rpath)
+			assert.Equal(t, nil, err, "did not want error")
 			r := rs.R(tt.platform, false)
 			assert.Equal(t, tt.expected, r, fmt.Sprintf("R not equal to <%s>. %s", tt.expected, tt.message))
 		}

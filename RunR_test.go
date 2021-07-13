@@ -26,7 +26,11 @@ func TestRunRBatch(t *testing.T) {
 			name: "Test R Version",
 			args: args{
 				fs: afero.NewOsFs(),
-				rs: NewRSettings(""),
+				rs: func() RSettings {
+					rs, _ := NewRSettings("")
+
+					return *rs
+				}(),
 				cmdArgs: []string{
 					"--version",
 				},
@@ -50,19 +54,25 @@ https://www.gnu.org/licenses/.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := RunRWithOutput(context.Background(), tt.args.rs, "", tt.args.cmdArgs)
+			got, err := tt.args.rs.RunR(context.Background(), "", tt.args.cmdArgs...)
 			assert.Equal(t, nil, err, "error")
 
-			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(got), string(tt.want))
-			assert.True(t, bytes.HasPrefix(got, []byte("R version")), msg)
+			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(got.Output), string(tt.want))
+			assert.True(t, bytes.HasPrefix(got.Output, []byte("R version")), msg)
 
 		})
 	}
 }
 
 func BenchmarkRunR(b *testing.B) {
-	rs := NewRSettings("R")
+	rs, err := NewRSettings("R")
+	if err != nil {
+		b.Fatalf("non-nil err: %v", err)
+	}
 	for n := 0; n < b.N; n++ {
-		RunRWithOutput(context.Background(), rs, "", []string{"--version"})
+		_, err := rs.RunR(context.Background(), "", "--version")
+		if err != nil {
+			b.Fatalf("caught error: %v", err)
+		}
 	}
 }

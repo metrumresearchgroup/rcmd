@@ -20,7 +20,7 @@ var censoredVars = map[string]string{
 
 // sysEnvVars contains the default environment variables usually from
 // os.Environ()
-func configureEnv(sysEnvVars []string, rs RSettings) []string {
+func configureEnv(sysEnvVars []string, rs *RSettings) []string {
 	envList := NvpList{}
 	envVars := []string{}
 
@@ -71,7 +71,7 @@ func configureEnv(sysEnvVars []string, rs RSettings) []string {
 		// Force R_LIBS_USER to be an non-empty dir so that we can be sure it won't get overridden by default R paths.
 		envList = NvpAppend(envList, "R_LIBS_USER", tmpdir)
 
-		ok, lp := rs.LibPathsEnv()
+		lp, ok := rs.LibPathsEnv()
 		if ok {
 			envList = NvpAppendPair(envList, lp)
 		}

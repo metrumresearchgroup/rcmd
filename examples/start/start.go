@@ -19,23 +19,36 @@ func main() {
 }
 
 func startR_example() {
-	if err := rcmd.StartR(context.Background(), rcmd.NewRSettings("R"), "", []string{}, *rcmd.NewRunConfig()); err != nil {
+	rs, err := rcmd.NewRSettings("R")
+	if err != nil {
+		panic(err)
+	}
+	if err := rcmd.StartR(context.Background(), *rs, "", []string{}, *rcmd.NewRunConfig()); err != nil {
 		panic(err)
 	}
 }
 
 func startR_example2() {
-	if err := rcmd.StartR(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "slave"}, *rcmd.NewRunConfig()); err != nil {
+	rs, err := rcmd.NewRSettings("R")
+	if err != nil {
+		panic(err)
+	}
+	if err := rcmd.StartR(context.Background(), *rs, "", []string{"-e", "2+2", "slave"}, *rcmd.NewRunConfig()); err != nil {
 		panic(err)
 	}
 }
 
 func runR_expression() {
-	res, err := rcmd.RunRWithOutput(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave"})
+	rs, err := rcmd.NewRSettings("R")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(strings.Join(rp.ScanLines(res), "\n"))
+
+	res, err := rs.RunR(context.Background(), "", "-e", "2+2", "--slave")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(strings.Join(rp.ScanLines(res.Output), "\n"))
 }
 func runRWithOutput_example() {
 	res, err := rcmd.RunR(context.Background(), rcmd.NewRSettings("R"), "", []string{"-e", "2+2", "--slave", "--interactive"}, *rcmd.NewRunConfig())
