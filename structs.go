@@ -27,7 +27,6 @@ type RSettings struct {
 	Version  RVersion `json:"r_version,omitempty"`
 	LibPaths []string `json:"lib_paths,omitempty"`
 	RPath    string   `json:"rpath,omitempty"`
-	EnvVars  NvpList  `json:"env_vars,omitempty"`
 	Platform string   `json:"platform,omitempty"`
 }
 
