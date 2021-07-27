@@ -16,7 +16,6 @@ type Filter struct {
 
 type FilterFunc func([]byte) []byte
 
-
 func NewFilter(w io.Writer, filters ...FilterFunc) *Filter {
 	f := &Filter{
 		w:   w,
@@ -73,7 +72,7 @@ func NewPrefixFilter(pfx string) FilterFunc {
 	}
 }
 
-func InputStripper(bs []byte) []byte {
+func InputFilter(bs []byte) []byte {
 	buf := bytes.Buffer{}
 
 	if !bytes.HasPrefix(bs, []byte{'>'}) {
@@ -82,7 +81,6 @@ func InputStripper(bs []byte) []byte {
 
 	return buf.Bytes()
 }
-
 
 func (f *Filter) filterLines(p []byte) (n int, err error) {
 	buf := bytes.NewReader(p)

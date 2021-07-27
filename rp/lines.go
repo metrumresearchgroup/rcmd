@@ -18,9 +18,8 @@ func ScanLines(b []byte) ([]string, error) {
 // with all input-like lines (which start with ">") excluded.
 func ScanROutput(b []byte, outputOnly bool) ([]string, error) {
 	var fns []writers.FilterFunc
-
 	if outputOnly {
-		fns = append(fns, writers.InputStripper)
+		fns = append(fns, writers.InputFilter)
 	}
 	fns = append(fns, writers.LineNumberStripper)
 	fns = append(fns, bytes.TrimSpace)

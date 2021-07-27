@@ -31,6 +31,5 @@ func TestRVersion(t *testing.T) {
 		assert.Equal(tt.expectedString, actual, fmt.Sprintf("test num: %v", i+1))
 		actual = tt.in.ToFullString()
 		assert.Equal(tt.expectedFull, actual, fmt.Sprintf("test num: %v", i+1))
-
 	}
 }

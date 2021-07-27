@@ -1,21 +1,30 @@
-// +build R
+// +build !windows
 
 package rcmd
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/metrumresearchgroup/wrapt"
 )
 
-func TestRVersionExecution(t *testing.T) {
-	assert := assert.New(t)
-	rs := NewRSettings("")
+func TestRVersionExecution(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
+	rs, err := NewRSettings("")
+	t.A.NoError(err)
+
 	// this test expects a machine with R 3.5.2 available on the default System Path
-	// TODO: refactor to make more generalized or mock
 	expected := RVersion{3, 5, 2}
-	assert.Equal(rs.Version, RVersion{}, "unitialized to no R version")
-	actual := GetRVersion(&rs)
-	assert.Equal(expected, actual, "returns the R version")
-	assert.Equal(expected, rs.Version, "after initialization")
+	t.A.Empty(rs.Version, "uncollected value")
+
+	actual, err := rs.getRVersion()
+	t.A.NoError(err)
+
+	t.RunFatal("R version", func(t *wrapt.T) {
+		t.A.Equal(expected, actual)
+	})
+	t.RunFatal("rs.Version", func(t *wrapt.T) {
+		t.A.Equal(expected, rs.Version)
+	})
 }

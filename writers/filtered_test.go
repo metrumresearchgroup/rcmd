@@ -11,7 +11,6 @@ import (
 
 func Test_Filters(tt *testing.T) {
 
-
 	type args struct {
 		filters []writers.FilterFunc
 	}
@@ -46,7 +45,7 @@ func Test_Filters(tt *testing.T) {
 		{
 			name: "combined",
 			args: args{filters: []writers.FilterFunc{
-				writers.InputStripper,
+				writers.InputFilter,
 				writers.LineNumberStripper,
 				bytes.TrimSpace,
 				writers.NewPrefixFilter("out"),
