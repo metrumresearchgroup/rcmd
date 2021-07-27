@@ -2,8 +2,8 @@ package rcmd
 
 import (
 	"bufio"
+	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -12,7 +12,7 @@ import (
 	"github.com/metrumresearchgroup/command"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/metrumresearchgroup/rcmd/rp"
+	"github.com/metrumresearchgroup/rcmd/writers"
 )
 
 const defaultFailedCode = 1
@@ -107,7 +107,7 @@ func StartR(
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
-	p, err := capture.Start(ctx, rpath, cmdArgs...)
+	_, err := capture.Start(ctx, rpath, cmdArgs...)
 	if err != nil {
 		return err
 	}
@@ -149,33 +149,34 @@ func RunR(
 		return 0, err
 	}
 
-	stdoutScanner := bufio.NewScanner(p.Stdout) // Notice that this is not in a loop
-	stderrScanner := bufio.NewScanner(p.Stderr) // Notice that this is not in a loop
+	var fns []writers.FilterFunc
 
+	if rc.StripLineNumbers {
+		fns = append(fns, writers.LineNumberStripper)
+	}
+	fns = append(fns, bytes.TrimSpace)
+	if rc.Prefix != "" {
+		fns = append(fns, writers.NewPrefixFilter(rc.Prefix))
+	}
+
+	filter := writers.NewFilter(rc.Stdout, fns...)
+
+	stdoutScanner := bufio.NewScanner(p.Stdout) // Notice that this is not in a loop
 	go func() {
 		for stdoutScanner.Scan() {
-			text := stdoutScanner.Text()
-			if rc.StripLineNumbers {
-				text = rp.StripLineNumber(text)
-			}
-			if rc.Prefix != "" {
-				fmt.Fprintln(rc.Stdout, rc.Prefix, text)
-			} else {
-				fmt.Fprintln(rc.Stdout, text)
+			_, err := filter.Write(stdoutScanner.Bytes())
+			if err != nil {
+				break
 			}
 		}
 	}()
 
+	stderrScanner := bufio.NewScanner(p.Stderr) // Notice that this is not in a loop
 	go func() {
 		for stderrScanner.Scan() {
-			text := stderrScanner.Text()
-			if rc.StripLineNumbers {
-				text = rp.StripLineNumber(text)
-			}
-			if rc.Prefix != "" {
-				fmt.Fprintln(rc.Stdout, rc.Prefix, text)
-			} else {
-				fmt.Fprintln(rc.Stdout, text)
+			_, err := filter.Write(stdoutScanner.Bytes())
+			if err != nil {
+				break
 			}
 		}
 	}()
@@ -192,13 +193,15 @@ func RunR(
 }
 
 // RunRWithOutput runs a non-interactive R command and returns the combined output
-func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...string) error {
+func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...string) (*command.Capture, error) {
 	envVars := configureEnv(os.Environ(), rs)
 	name := rs.R(runtime.GOOS, false)
 
 	return run(ctx, envVars, dir, name, args...)
 }
 
-func run(ctx context.Context, env []string, dir string, name string, args ...string) error {
-	return command.New(command.WithEnv(env), command.WithDir(dir)).Run(ctx, name, args...)
+func run(ctx context.Context, env []string, dir string, name string, args ...string) (*command.Capture, error) {
+	cmd := command.New(command.WithEnv(env), command.WithDir(dir))
+	err := cmd.Run(ctx, name, args...)
+	return cmd, err
 }

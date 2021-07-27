@@ -54,7 +54,7 @@ https://www.gnu.org/licenses/.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.args.rs.RunR(context.Background(), "", tt.args.cmdArgs...)
+			got, err := tt.args.rs.RunRWithOutput(context.Background(), "", tt.args.cmdArgs...)
 			assert.Equal(t, nil, err, "error")
 
 			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(got.Output), string(tt.want))
@@ -70,7 +70,7 @@ func BenchmarkRunR(b *testing.B) {
 		b.Fatalf("non-nil err: %v", err)
 	}
 	for n := 0; n < b.N; n++ {
-		_, err := rs.RunR(context.Background(), "", "--version")
+		_, err := rs.RunRWithOutput(context.Background(), "", "--version")
 		if err != nil {
 			b.Fatalf("caught error: %v", err)
 		}

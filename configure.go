@@ -24,12 +24,6 @@ func configureEnv(sysEnvVars []string, rs *RSettings) []string {
 	envList := NvpList{}
 	envVars := []string{}
 
-	for _, p := range rs.EnvVars.Pairs {
-		_, exists := envList.Get(p.Name)
-		if !exists {
-			envList = NvpAppend(envList, p.Name, p.Value)
-		}
-	}
 	// system env vars generally
 	for _, ev := range sysEnvVars {
 		evs := strings.SplitN(ev, "=", 2)

@@ -14,8 +14,7 @@ import (
 // NewRSettings initializes RSettings
 func NewRSettings(rPath string) (*RSettings, error) {
 	rs := RSettings{
-		EnvVars: NvpList{},
-		RPath:   rPath,
+		RPath: rPath,
 	}
 	// since we have the path in the constructor, we might as well get the R version now too
 	_, err := rs.getRVersion()
@@ -61,7 +60,7 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 		return &version, nil
 	}
 
-	capture, err := rs.RunR(context.Background(), "", "--version", "--vanilla")
+	capture, err := rs.RunRWithOutput(context.Background(), "", "--version", "--vanilla")
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +83,11 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 }
 
 func parseVersionData(data []byte) (version *RVersion, platform string, err error) {
-	lines := rp.ScanLines(data)
+	lines, err := rp.ScanLines(data)
+	if err != nil {
+		return nil, "", err
+	}
+
 	for _, line := range lines {
 		if strings.HasPrefix(line, "R version") {
 			spl := strings.Split(line, " ")

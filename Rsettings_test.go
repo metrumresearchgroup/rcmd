@@ -44,7 +44,7 @@ func TestLibPathsEnv(t *testing.T) {
 func TestParseVersionData(t *testing.T) {
 	var rVersionTests = []struct {
 		data     []byte
-		version  RVersion
+		version  *RVersion
 		platform string
 		message  string
 	}{
@@ -60,7 +60,7 @@ func TestParseVersionData(t *testing.T) {
 			https://www.gnu.org/licenses/.
 
 `),
-			version: RVersion{
+			version: &RVersion{
 				Major: 3,
 				Minor: 6,
 				Patch: 0,
@@ -80,7 +80,7 @@ For more information about these matters see
 http://www.gnu.org/licenses/.
 
 `),
-			version: RVersion{
+			version: &RVersion{
 				Major: 3,
 				Minor: 5,
 				Patch: 2,
@@ -93,7 +93,7 @@ http://www.gnu.org/licenses/.
 			R version 1.2.3 (2018-12-20) -- "name for Ubuntu"            
 			Platform: x86_64-pc-linux-gnu (64-bit)
 			`),
-			version: RVersion{
+			version: &RVersion{
 				Major: 1,
 				Minor: 2,
 				Patch: 3,
@@ -103,10 +103,12 @@ http://www.gnu.org/licenses/.
 		},
 	}
 	for _, tt := range rVersionTests {
-		version, platform, err := parseVersionData(tt.data)
-		assert.Equal(t, err, nil, "err should be nil, was: %v", err)
-		assert.Equal(t, tt.version, version, fmt.Sprintf("Version not equal: %s", tt.message))
-		assert.Equal(t, tt.platform, platform, fmt.Sprintf("Platform not equal: %s", tt.message))
+		t.Run(tt.message, func(t *testing.T) {
+			version, platform, err := parseVersionData(tt.data)
+			assert.Equal(t, err, nil, "err should be nil, was: %v", err)
+			assert.Equal(t, tt.version, version, fmt.Sprintf("Version not equal: %s", tt.message))
+			assert.Equal(t, tt.platform, platform, fmt.Sprintf("Platform not equal: %s", tt.message))
+		})
 	}
 }
 
