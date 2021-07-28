@@ -37,7 +37,7 @@ func (f *Filter) Write(p []byte) (n int, err error) {
 	return f.filterLines(p)
 }
 
-var LineRegEx = regexp.MustCompile("^\\s*\\[\\d+]\\s*")
+var LineRegEx = regexp.MustCompile(`^\s*\[\d+]\s*`)
 
 func LineNumberStripper(bs []byte) []byte {
 	buf := bytes.Buffer{}

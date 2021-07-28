@@ -2,119 +2,107 @@ package rcmd
 
 //
 import (
+	"io/ioutil"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/metrumresearchgroup/environ"
+	"github.com/metrumresearchgroup/wrapt"
+	"github.com/stretchr/testify/assert"
 )
 
-/*
 type configureArgsTestCase struct {
 	context string
 	// mocked system environment variables per os.Environ()
 	input    []string
 	expected []string
 }
-*/
 
-/*
-func TestConfigureArgs(t *testing.T) {
-	defaultRS := NewRSettings("")
+func TestConfigureArgs1(t *testing.T) {
+	defaultRS, err := NewRSettings("")
+	assert.NoError(t, err)
+
 	// there should always be at least one libpath
 	defaultRS.LibPaths = []string{"path/to/install/lib"}
-	var installArgsTests = []configureArgsTestCase{
+	var tests = []configureArgsTestCase{
 		{
-			"minimal",
-			"",
-			[]string{},
-			[]string{"R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "minimal",
+			input:    []string{},
+			expected: []string{"R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"non-impactful system env set",
-			"",
-			[]string{"MISC_ENV=foo", "MISC2=bar"},
-			[]string{"MISC_ENV=foo", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib"},
+			context:  "non-impactful system env set",
+			input:    []string{"MISC_ENV=foo", "MISC2=bar"},
+			expected: []string{"MISC_ENV=foo", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib"},
 		},
 		{
-			"non-impactful system env set with known package",
-			"dplyr",
-			[]string{"MISC_ENV=foo", "MISC2=bar"},
-			[]string{"DPLYR_ENV=true", "MISC_ENV=foo", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "non-impactful system env set with known package",
+			input:    []string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=true"},
+			expected: []string{"DPLYR_ENV=true", "MISC_ENV=foo", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"impactful system env set on separate package",
-			"",
-			[]string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=false"},
-			[]string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=false", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "impactful system env set on separate package",
+			input:    []string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=false"},
+			expected: []string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=false", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"impactful system env set with known package",
-			"dplyr",
-			[]string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=false"},
-			[]string{"DPLYR_ENV=true", "MISC_ENV=foo", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "impactful system env set with known package",
+			input:    []string{"MISC_ENV=foo", "MISC2=bar", "DPLYR_ENV=true"},
+			expected: []string{"DPLYR_ENV=true", "MISC_ENV=foo", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"R_LIBS_SITE env set",
-			"",
-			[]string{"R_LIBS_SITE=original/path", "MISC2=bar"},
-			[]string{"MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "R_LIBS_SITE env set",
+			input:    []string{"R_LIBS_SITE=original/path", "MISC2=bar"},
+			expected: []string{"MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"R_LIBS_SITE env set with known package",
-			"dplyr",
-			[]string{"R_LIBS_SITE=original/path", "MISC2=bar"},
-			[]string{"DPLYR_ENV=true", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "R_LIBS_SITE env set with known package",
+			input:    []string{"R_LIBS_SITE=original/path", "MISC2=bar", "DPLYR_ENV=true"},
+			expected: []string{"DPLYR_ENV=true", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"R_LIBS_USER env set",
-			"",
-			[]string{"R_LIBS_USER=original/path", "MISC2=bar"},
-			[]string{"MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "R_LIBS_USER env set",
+			input:    []string{"R_LIBS_USER=original/path", "MISC2=bar"},
+			expected: []string{"MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"R_LIBS_USER env set with known package",
-			"dplyr",
-			[]string{"R_LIBS_USER=original/path", "MISC2=bar"},
-			[]string{"DPLYR_ENV=true", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "R_LIBS_USER env set with known package",
+			input:    []string{"R_LIBS_USER=original/path", "MISC2=bar", "DPLYR_ENV=true"},
+			expected: []string{"DPLYR_ENV=true", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"R_LIBS_SITE and R_LIBS_USER env set",
-			"",
-			[]string{"R_LIBS_USER=original/path", "R_LIBS_SITE=original/site/path", "MISC2=bar"},
-			[]string{"MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "R_LIBS_SITE and R_LIBS_USER env set",
+			input:    []string{"R_LIBS_USER=original/path", "R_LIBS_SITE=original/site/path", "MISC2=bar"},
+			expected: []string{"MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 		{
-			"R_LIBS_SITE and R_LIBS_USER env set",
-			"dplyr",
-			[]string{"R_LIBS_USER=original/path", "R_LIBS_SITE=original/site/path", "MISC2=bar"},
-			[]string{"DPLYR_ENV=true", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
-		},
-		{
-			"System contains sensitive information",
-			"",
-			[]string{"R_LIBS_USER=original/path", "GITHUB_PAT=should_get_hidden1", "ghe_token=should_get_hidden2", "ghe_PAT=should_get_hidden3", "github_token=should_get_hidden4"},
-			[]string{"GITHUB_PAT=**HIDDEN**", "ghe_token=**HIDDEN**", "ghe_PAT=**HIDDEN**", "github_token=**HIDDEN**", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
+			context:  "R_LIBS_SITE and R_LIBS_USER env set",
+			input:    []string{"R_LIBS_USER=original/path", "R_LIBS_SITE=original/site/path", "MISC2=bar", "DPLYR_ENV=true"},
+			expected: []string{"DPLYR_ENV=true", "MISC2=bar", "R_LIBS_SITE=path/to/install/lib", "R_LIBS_USER=SHOULD_BE_TMP_DIR"},
 		},
 	}
-	for _, tt := range installArgsTests {
-		t.Run(tt.context, func(t *testing.T) {
-			actual := configureEnv(tt.sysEnv, defaultRS)
+	for _, test := range tests {
+		t.Run(test.context, func(tt *testing.T) {
+			t := wrapt.WrapT(tt)
+
+			actual, err := configureEnv(test.input, defaultRS)
+			t.A.NoError(err)
 
 			// Make sure that all environment variables are present
 			// Also make sure that R_LIBS_USER is set.
-			checkEnvVarsValid(t, tt, actual)
+			checkEnvVarsValid(t, test.expected, actual)
 
 			// assert.Equal(tt.expected, actual, fmt.Sprintf("%s, test num: %v", tt.context, i+1))
 		})
 	}
 }
-*/
 
-/*
-func TestConfigureArgs(t *testing.T) {
-	var installArgsTests = []configureArgsTestCase{
+func TestConfigureArgs2(t *testing.T) {
+	var tests = []configureArgsTestCase{
 		{
-			"variety of spellings",
-			[]string{
+			context: "variety of spellings",
+			input: []string{
 				"R_LIBS_USER=some/path",
 				"GITHUB_PAT=should_get_hidden1",
 				"ghe_token=should_get_hidden2",
@@ -124,7 +112,7 @@ func TestConfigureArgs(t *testing.T) {
 				"AWS_SECRET_KEY=should_get_hidden6",
 				"ADDL_ARG=could-be-secret",
 			},
-			[]string{
+			expected: []string{
 				"R_LIBS_USER=some/path",
 				"GITHUB_PAT=***HIDDEN***",
 				"ghe_token=***HIDDEN***",
@@ -136,37 +124,39 @@ func TestConfigureArgs(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range installArgsTests {
-		actual := censorEnvVars(tt.input)
-		assert.Equal(t, tt.expected, actual, tt.context)
+	for _, test := range tests {
+		actual := censorEnvVars(test.input)
+		assert.Equal(t, test.expected, actual, test.context)
 	}
 }
-*/
-/*
+
 func TestConfigureArgsAddl(t *testing.T) {
-	var installArgsTests = []configureArgsTestCase{
+	var tests = []configureArgsTestCase{
 		{
-			"additional hidden",
-			[]string{
+			context: "additional hidden",
+			input: []string{
 				"R_LIBS_USER=some/path",
 				"GITHUB_PAT=should_get_hidden1",
 				"ADDL_ARG=could-be-secret",
 			},
-			[]string{
+			expected: []string{
 				"R_LIBS_USER=some/path",
 				"GITHUB_PAT=***HIDDEN***",
 				"ADDL_ARG=***HIDDEN***",
 			},
 		},
 	}
-	for _, tt := range installArgsTests {
-		actual := censorEnvVars(tt.input, "ADDL_ARG")
-		assert.Equal(t, tt.expected, actual, tt.context)
+	for _, test := range tests {
+		t.Run(test.context, func(t *testing.T) {
+			actual := censorEnvVars(test.input, "ADDL_ARG")
+			assert.Equal(t, test.expected, actual, test.context)
+		})
 	}
 }
-*/
 
-func Test_configureEnv(t *testing.T) {
+func Test_configureEnv(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
 	rs, err := NewRSettings("R")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -177,26 +167,28 @@ func Test_configureEnv(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want := configureEnv(cleanEnv.AsSlice(), rs)
-	got := configureEnv(cleanEnv.AsSlice(), rs)
+	want, err := configureEnv(cleanEnv.AsSlice(), rs)
+	t.A.NoError(err)
+	got, err := configureEnv(cleanEnv.AsSlice(), rs)
+	t.A.NoError(err)
 
 	wantenv := environ.New(want)
 	gotenv := environ.New(got)
 
-	t.Run("Env", func(t *testing.T) {
+	t.Run("Env", func(t *wrapt.T) {
 		for _, key := range wantenv.Keys() {
 			if wantenv.Get(key) == "" {
 				continue
 			}
-			t.Run(key, func(t *testing.T) {
+			t.Run(key, func(t *wrapt.T) {
 				if key != "R_LIBS_USER" {
-					t.Run("match", func(t *testing.T) {
+					t.Run("match", func(t *wrapt.T) {
 						if wantenv.Get(key) != gotenv.Get(key) {
 							t.Errorf("wantenv.Get(`%s`): %v, gotenv.Get(`%s`): %v", key, wantenv.Get(key), key, gotenv.Get(key))
 						}
 					})
 				} else {
-					t.Run("should not match", func(t *testing.T) {
+					t.Run("should not match", func(t *wrapt.T) {
 
 						if wantenv.Get("R_LIBS_USER") == gotenv.Get("R_LIBS_USER") {
 							t.Errorf("")
@@ -207,3 +199,52 @@ func Test_configureEnv(t *testing.T) {
 		}
 	})
 }
+
+// Utility functions
+func checkEnvVarsValid(t *wrapt.T, expected []string, actualResults []string) {
+	t.Helper()
+
+	rLibsUserFound := false
+	for _, envVar := range actualResults {
+		t.Run(envVar, func(t *wrapt.T) {
+			if strings.HasPrefix(envVar, "R_LIBS_USER") {
+				rLibsUserFound = true
+				tmpDir := strings.Split(envVar, "=")[1]
+				checkIsTempDir(t, tmpDir)
+				assert.DirExists(t, tmpDir)
+				dirEntries, err := ioutil.ReadDir(tmpDir)
+				assert.Nil(t, err)
+				assert.Empty(t, dirEntries, "failure: R_LIBS_USER was not set to an EMPTY temp directory")
+			} else {
+				assert.Contains(t, expected, envVar, "excess environment vars found")
+				// assert.Equal(testCase.expected[index], envVar) // We are no longer claiming that order matters.
+			}
+		})
+	}
+	assert.True(t, rLibsUserFound, "R_LIBS_USER was not set -- we expect it to always be set")
+	// Make sure we're not missing any expected vars. A little redundant, but the easiest way to do this.
+	for _, envVar := range expected {
+		if strings.HasPrefix(envVar, "R_LIBS_USER") {
+			continue
+		} else {
+			assert.Contains(t, actualResults, envVar, "missing expected environment var")
+		}
+	}
+}
+
+func checkIsTempDir(t *wrapt.T, tmpDir string) {
+	t.Helper()
+
+	switch runtime.GOOS {
+	case "darwin":
+		assert.True(t, strings.Contains(tmpDir, "var/folders"), "R_LIBS_USER not set to temp directory: Dir found: %s", tmpDir)
+	case "linux":
+		t.Skip("tmp dir check not implemented for linux")
+	case "windows":
+		t.Skip("tmp dir check not implemented for linux")
+	default:
+		t.Skip("tmp dir check not implemented for detected os")
+	}
+}
+
+// end Utility functions

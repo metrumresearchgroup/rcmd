@@ -22,7 +22,7 @@ func TestLibPathsEnv(t *testing.T) {
 					"path/to/folder2/",
 				},
 			},
-			expected: "R_LIBS_SITE=path/to/folder1/:path/to/folder2/",
+			expected: "path/to/folder1/:path/to/folder2/",
 		},
 		{
 			name: "empty paths",
@@ -37,7 +37,6 @@ func TestLibPathsEnv(t *testing.T) {
 			t := wrapt.WrapT(t)
 
 			actual, ok := test.in.LibPathsEnv()
-			t.A.NotEmpty(actual, "result")
 
 			if actual != "" && !ok {
 				t.Errorf("LibPaths exist but ok is false")

@@ -176,11 +176,11 @@ func TestRemove(t *testing.T) {
 		nvpList = NvpAppend(nvpList, tt.name, tt.value)
 	}
 	nvpList = NvpRemove(nvpList, "name2")
-	assert.Equal(t, 2, len(nvpList.Pairs), fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "name1", nvpList.Pairs[0].Name, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "value1", nvpList.Pairs[0].Value, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "name3", nvpList.Pairs[1].Name, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "value3", nvpList.Pairs[1].Value, fmt.Sprintf("Fail: remove"))
+	assert.Equal(t, 2, len(nvpList.Pairs))
+	assert.Equal(t, "name1", nvpList.Pairs[0].Name)
+	assert.Equal(t, "value1", nvpList.Pairs[0].Value)
+	assert.Equal(t, "name3", nvpList.Pairs[1].Name)
+	assert.Equal(t, "value3", nvpList.Pairs[1].Value)
 }
 
 func TestRemove_First(t *testing.T) {
@@ -210,11 +210,11 @@ func TestRemove_First(t *testing.T) {
 		nvpList = NvpAppend(nvpList, tt.name, tt.value)
 	}
 	nvpList = NvpRemove(nvpList, "name1")
-	assert.Equal(t, 2, len(nvpList.Pairs), fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "name2", nvpList.Pairs[0].Name, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "value2", nvpList.Pairs[0].Value, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "name3", nvpList.Pairs[1].Name, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "value3", nvpList.Pairs[1].Value, fmt.Sprintf("Fail: remove"))
+	assert.Equal(t, 2, len(nvpList.Pairs))
+	assert.Equal(t, "name2", nvpList.Pairs[0].Name)
+	assert.Equal(t, "value2", nvpList.Pairs[0].Value)
+	assert.Equal(t, "name3", nvpList.Pairs[1].Name)
+	assert.Equal(t, "value3", nvpList.Pairs[1].Value)
 }
 
 func TestRemove_Last(t *testing.T) {
@@ -244,9 +244,9 @@ func TestRemove_Last(t *testing.T) {
 		nvpList = NvpAppend(nvpList, tt.name, tt.value)
 	}
 	nvpList = NvpRemove(nvpList, "name3")
-	assert.Equal(t, 2, len(nvpList.Pairs), fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "name1", nvpList.Pairs[0].Name, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "value1", nvpList.Pairs[0].Value, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "name2", nvpList.Pairs[1].Name, fmt.Sprintf("Fail: remove"))
-	assert.Equal(t, "value2", nvpList.Pairs[1].Value, fmt.Sprintf("Fail: remove"))
+	assert.Equal(t, 2, len(nvpList.Pairs))
+	assert.Equal(t, "name1", nvpList.Pairs[0].Name)
+	assert.Equal(t, "value1", nvpList.Pairs[0].Value)
+	assert.Equal(t, "name2", nvpList.Pairs[1].Name)
+	assert.Equal(t, "value2", nvpList.Pairs[1].Value)
 }

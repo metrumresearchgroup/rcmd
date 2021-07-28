@@ -15,9 +15,6 @@ import (
 	"github.com/metrumresearchgroup/rcmd/writers"
 )
 
-const defaultFailedCode = 1
-const defaultSuccessCode = 0
-
 // RunCfg contains the configuration for use when executing a run
 type RunCfg struct {
 	Stdout           io.Writer
@@ -103,11 +100,14 @@ func StartR(
 	cmdArgs []string,
 	rc RunCfg,
 ) error {
-	envVars := configureEnv(os.Environ(), &rs)
+	envVars, err := configureEnv(os.Environ(), &rs)
+	if err != nil {
+		return err
+	}
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
-	_, err := capture.Start(ctx, rpath, cmdArgs...)
+	_, err = capture.Start(ctx, rpath, cmdArgs...)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,10 @@ func RunR(
 	cmdArgs []string,
 	rc RunCfg,
 ) (int, error) {
-	envVars := configureEnv(os.Environ(), &rs)
+	envVars, err := configureEnv(os.Environ(), &rs)
+	if err != nil {
+		return 0, err
+	}
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
@@ -194,7 +197,10 @@ func RunR(
 
 // RunRWithOutput runs a non-interactive R command and returns the combined output
 func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...string) (*command.Capture, error) {
-	envVars := configureEnv(os.Environ(), rs)
+	envVars, err := configureEnv(os.Environ(), rs)
+	if err != nil {
+		return nil, err
+	}
 	name := rs.R(runtime.GOOS, false)
 
 	return run(ctx, envVars, dir, name, args...)

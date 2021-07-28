@@ -1,4 +1,4 @@
-// +build !windows
+// +build R
 
 package rcmd
 

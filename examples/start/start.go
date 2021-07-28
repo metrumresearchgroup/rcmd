@@ -3,18 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/metrumresearchgroup/rcmd"
-	"github.com/metrumresearchgroup/rcmd/rp"
-	"github.com/mitchellh/go-homedir"
-	log "github.com/sirupsen/logrus"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/mitchellh/go-homedir"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/metrumresearchgroup/rcmd"
+	"github.com/metrumresearchgroup/rcmd/rp"
 )
 
 func main() {
-	//startR_example()
-	//runR_expression()
+	// startR_example()
+	// runR_expression()
 	runR_exampleCancel()
 }
 

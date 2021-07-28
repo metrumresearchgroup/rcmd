@@ -3,7 +3,6 @@ package rcmd
 import (
 	"context"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -128,5 +127,5 @@ func (rs RSettings) LibPathsEnv() (string, bool) {
 	if len(rs.LibPaths) == 1 && rs.LibPaths[0] == "" {
 		return "", false
 	}
-	return fmt.Sprintf("R_LIBS_SITE=%s", strings.Join(rs.LibPaths, ":")), true
+	return strings.Join(rs.LibPaths, ":"), true
 }
