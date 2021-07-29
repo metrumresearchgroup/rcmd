@@ -16,9 +16,6 @@ import (
 
 // RunCfg contains the configuration for use when executing a run
 type RunCfg struct {
-	// Stdout           io.ReadCloser
-	// Stderr           io.ReadCloser
-	// Stdin            io.WriteCloser
 	Prefix           string
 	StripLineNumbers bool
 	Script           bool
@@ -29,9 +26,6 @@ type RunOption func(*RunCfg)
 
 func NewRunConfig(opts ...RunOption) *RunCfg {
 	cfg := &RunCfg{
-		// Stdout:           os.Stdout,
-		// Stderr:           os.Stderr,
-		// Stdin:            os.Stdin,
 		Prefix:           "",
 		StripLineNumbers: true,
 		Script:           false,
@@ -57,31 +51,6 @@ func WithLineNumbers(ln bool) RunOption {
 	}
 }
 
-//
-// // WithStdOut Sets the writer to send results sent to stdout
-// // for example to suppress stdout could provide `WithStdOut(ioutil.Discard)`
-// func WithStdOut(r io.ReadCloser) RunOption {
-// 	return func(rc *RunCfg) {
-// 		rc.Stdout = r
-// 	}
-// }
-//
-// // WithStdErr Sets the writer to send results sent to stderr
-// // for example to suppress stderr could provide `WithStdOut(ioutil.Discard)`
-// func WithStdErr(r io.ReadCloser) RunOption {
-// 	return func(rc *RunCfg) {
-// 		rc.Stdout = r
-// 	}
-// }
-//
-// // WithStdin Sets the writer to send information the stdin. Not all R commands
-// // accept stdin.
-// func WithStdin(w io.WriteCloser) RunOption {
-// 	return func(rc *RunCfg) {
-// 		rc.Stdin = w
-// 	}
-// }
-
 // WithPrefix sets a prefix string before any message is sent to the stdout/stderr writers
 // This is useful when printing concurrent results out and want to differentiate
 // where messages are coming from
@@ -93,14 +62,8 @@ func WithPrefix(prefix string) RunOption {
 
 // StartR launches an interactive R console given the same
 // configuration as a specific package.
-func StartR(
-	ctx context.Context,
-	rs RSettings,
-	dir string, // this should be put into RSettings
-	cmdArgs []string,
-	rc RunCfg,
-) (*pipes.Pipes, error) {
-	envVars, err := configureEnv(os.Environ(), &rs)
+func (rs *RSettings) StartR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*pipes.Pipes, error) {
+	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +77,7 @@ func StartR(
 
 	return p, nil
 }
+
 func (rc *RunCfg) configPipe(p *pipes.Pipes) {
 	// Assign pipe's original out err to locals
 	sout, serr := p.Stdout, p.Stderr
@@ -155,13 +119,7 @@ func (rc *RunCfg) configPipe(p *pipes.Pipes) {
 // RunR runs a non-interactive R command and streams back the results of
 // the stderr and stdout to the RunCfg writers.
 // RunR returns the exit code of the process and and error, if relevant
-func RunR(
-	ctx context.Context,
-	rs *RSettings,
-	dir string,
-	cmdArgs []string,
-	rc *RunCfg,
-) (*pipes.Pipes, int, error) {
+func (rs *RSettings) RunR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*pipes.Pipes, int, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
 		return nil, 0, err

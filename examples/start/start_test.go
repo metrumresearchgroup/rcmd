@@ -1,12 +1,14 @@
-package main
+package start
 
 import (
 	"context"
 	"fmt"
 	"strings"
 	"sync"
+	"testing"
 	"time"
 
+	"github.com/metrumresearchgroup/wrapt"
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 
@@ -14,75 +16,81 @@ import (
 	"github.com/metrumresearchgroup/rcmd/rp"
 )
 
-func main() {
-	// startR_example()
-	// runR_expression()
-	runRWithOutput_example()
-	// runR_exampleCancel()
+func Test_startR_example(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
+	rs, err := rcmd.NewRSettings("R")
+	t.A.NoError(err)
+
+	_, err = rs.StartR(context.Background(), rcmd.NewRunConfig(rcmd.WithPrefix("foo")), "")
+	t.A.NoError(err)
 }
 
-func startR_example() {
+func Test_startR_example2(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
 	rs, err := rcmd.NewRSettings("R")
-	if err != nil {
-		panic(err)
-	}
-	if _, err := rcmd.StartR(context.Background(), *rs, "", []string{}, *rcmd.NewRunConfig()); err != nil {
-		panic(err)
-	}
+	t.A.NoError(err)
+
+	_, err = rs.StartR(context.Background(), rcmd.NewRunConfig(), "", "-e", "2+2", "slave")
+	t.A.NoError(err)
 }
 
-func startR_example2() {
-	rs, err := rcmd.NewRSettings("R")
-	if err != nil {
-		panic(err)
-	}
-	if _, err := rcmd.StartR(context.Background(), *rs, "", []string{"-e", "2+2", "slave"}, *rcmd.NewRunConfig()); err != nil {
-		panic(err)
-	}
-}
+func Test_runR_expression(tt *testing.T) {
+	t := wrapt.WrapT(tt)
 
-func runR_expression() {
 	rs, err := rcmd.NewRSettings("R")
-	if err != nil {
-		panic(err)
-	}
+	t.A.NoError(err)
 
 	ps, _, err := rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave")
-	if err != nil {
-		panic(err)
-	}
+	t.A.NoError(err)
 
 	lines, err := rp.ScanLines(ps)
+	t.A.NoError(err)
+
 	fmt.Println(strings.Join(lines, "\n"))
 }
-func runRWithOutput_example() {
+
+func Test_runRWithOutput_example(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
 	rs, err := rcmd.NewRSettings("R")
+	t.A.NoError(err)
+
 	bs, _, err := rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave", "--interactive")
-	if err != nil {
-		panic(err)
-	}
+	t.A.NoError(err)
+
 	fmt.Println(string(bs))
+
 	fmt.Println("----with prefix----")
+
 	rs, err = rcmd.NewRSettings("R")
+	t.A.NoError(err)
+
 	bs, _, err = rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave", "--interactive")
-	if err != nil {
-		panic(err)
-	}
+	t.A.NoError(err)
+
 	fmt.Println(string(bs))
 }
 
-func runR_exampleTimeout() {
+func Test_runR_exampleTimeout(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
 	rs, err := rcmd.NewRSettings("R")
+	t.A.NoError(err)
+
 	ctx, ccl := context.WithTimeout(context.Background(), 1*time.Second)
 	defer ccl()
-	_, res, err := rcmd.RunR(ctx, rs, "", []string{"-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive"}, rcmd.NewRunConfig())
-	if err != nil {
-		panic(err)
-	}
+
+	_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
+	t.A.NoError(err)
+
 	fmt.Println(res)
 }
 
-func runR_exampleCancel() {
+func Test_runR_exampleCancel(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	// fire off 3 go routines where the 2nd fails, and all existing should stop processing
@@ -90,17 +98,21 @@ func runR_exampleCancel() {
 	go func() {
 		defer wg.Done()
 		rs, err := rcmd.NewRSettings("R")
-		_, res, err := rcmd.RunR(ctx, rs, "", []string{"-e", "2+2", "--slave", "--interactive"}, rcmd.NewRunConfig())
+		t.A.NoError(err)
 
-		if err != nil {
-			panic(err)
-		}
+		_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
+		t.A.NoError(err)
+
 		fmt.Println("go routine 1: ", res)
 	}()
 	go func() {
 		defer wg.Done()
+
 		rs, err := rcmd.NewRSettings("R")
-		_, res, err := rcmd.RunR(ctx, rs, "", []string{"-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive"}, rcmd.NewRunConfig())
+		t.A.NoError(err)
+
+		_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive")
+		t.A.NoError(err)
 		if err != nil {
 			log.Error("goroutine 2 error:", err)
 			log.Warn("cancelling ongoing work...")
@@ -112,8 +124,10 @@ func runR_exampleCancel() {
 	go func() {
 		defer wg.Done()
 		rs, err := rcmd.NewRSettings("R")
+		t.A.NoError(err)
+		_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "Sys.sleep(1); 2+2", "--slave", "--interactive")
+		t.A.NoError(err)
 
-		_, res, err := rcmd.RunR(ctx, rs, "", []string{"-e", "Sys.sleep(1); 2+2", "--slave", "--interactive"}, rcmd.NewRunConfig())
 		if err != nil {
 			log.Error("goroutine 3 error:", err)
 		}
@@ -126,7 +140,7 @@ func runR_exampleCancel() {
 func runR_examplepkg() {
 	dir, _ := homedir.Expand("~/metrum/metrumresearchgroup/rbabylon")
 	rs, err := rcmd.NewRSettings("R")
-	_, res, err := rcmd.RunR(context.Background(), rs, dir, []string{"-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive"}, rcmd.NewRunConfig())
+	_, res, err := rs.RunR(context.Background(), rcmd.NewRunConfig(), dir, "-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive")
 	if err != nil {
 		panic(err)
 	}
