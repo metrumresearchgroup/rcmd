@@ -3,6 +3,8 @@ package rp
 import (
 	"bufio"
 	"bytes"
+	"io"
+	"sync"
 
 	"github.com/metrumresearchgroup/rcmd/writers"
 )
@@ -17,6 +19,9 @@ func ScanLines(b []byte) ([]string, error) {
 // the line numbers removed, whitespace trimmed, and (optionally)
 // with all input-like lines (which start with ">") excluded.
 func ScanROutput(b []byte, outputOnly bool) ([]string, error) {
+	if !bytes.HasSuffix(b, []byte{'\n'}) {
+		b = append(b, '\n')
+	}
 	var fns []writers.FilterFunc
 	if outputOnly {
 		fns = append(fns, writers.InputFilter)
@@ -24,19 +29,31 @@ func ScanROutput(b []byte, outputOnly bool) ([]string, error) {
 	fns = append(fns, writers.LineNumberStripper)
 	fns = append(fns, bytes.TrimSpace)
 
-	output := &bytes.Buffer{}
-	filter := writers.NewFilter(output, fns...)
+	r, w := io.Pipe()
+
+	var lines []string
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+		wg.Done()
+	}()
+
+	filter := writers.NewFilter(w, fns...)
 
 	_, err := filter.Write(b)
 	if err != nil {
 		return nil, err
 	}
 
-	scanner := bufio.NewScanner(output)
-	var lines []string
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+	err = filter.Close()
+	if err != nil {
+		return nil, err
 	}
 
+	wg.Wait()
 	return lines, nil
 }

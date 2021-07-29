@@ -59,7 +59,7 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 		return &version, nil
 	}
 
-	capture, err := rs.RunRWithOutput(context.Background(), "", "--version", "--vanilla")
+	co, _, err := rs.RunRWithOutput(context.Background(), "", "--version", "--vanilla")
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 	var version *RVersion
 	var platform string
 
-	version, platform, err = parseVersionData(capture.Output)
+	version, platform, err = parseVersionData(co)
 	if err != nil {
 		return nil, err
 	}

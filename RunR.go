@@ -6,20 +6,19 @@ import (
 	"context"
 	"io"
 	"os"
-	"os/exec"
 	"runtime"
 
 	"github.com/metrumresearchgroup/command"
-	log "github.com/sirupsen/logrus"
+	"github.com/metrumresearchgroup/command/pipes"
 
 	"github.com/metrumresearchgroup/rcmd/writers"
 )
 
 // RunCfg contains the configuration for use when executing a run
 type RunCfg struct {
-	Stdout           io.Writer
-	Stderr           io.Writer
-	Stdin            io.Reader
+	// Stdout           io.ReadCloser
+	// Stderr           io.ReadCloser
+	// Stdin            io.WriteCloser
 	Prefix           string
 	StripLineNumbers bool
 	Script           bool
@@ -30,9 +29,9 @@ type RunOption func(*RunCfg)
 
 func NewRunConfig(opts ...RunOption) *RunCfg {
 	cfg := &RunCfg{
-		Stdout:           os.Stdout,
-		Stderr:           os.Stderr,
-		Stdin:            os.Stdin,
+		// Stdout:           os.Stdout,
+		// Stderr:           os.Stderr,
+		// Stdin:            os.Stdin,
 		Prefix:           "",
 		StripLineNumbers: true,
 		Script:           false,
@@ -58,29 +57,30 @@ func WithLineNumbers(ln bool) RunOption {
 	}
 }
 
-// WithStdOut Sets the writer to send results sent to stdout
-// for example to suppress stdout could provide `WithStdOut(ioutil.Discard)`
-func WithStdOut(w io.Writer) RunOption {
-	return func(r *RunCfg) {
-		r.Stdout = w
-	}
-}
-
-// WithStdErr Sets the writer to send results sent to stderr
-// for example to suppress stderr could provide `WithStdOut(ioutil.Discard)`
-func WithStdErr(w io.Writer) RunOption {
-	return func(r *RunCfg) {
-		r.Stdout = w
-	}
-}
-
-// WithStdin Sets the writer to send information the stdin. Not all R commands
-// accept stdin.
-func WithStdin(r io.Reader) RunOption {
-	return func(rc *RunCfg) {
-		rc.Stdin = r
-	}
-}
+//
+// // WithStdOut Sets the writer to send results sent to stdout
+// // for example to suppress stdout could provide `WithStdOut(ioutil.Discard)`
+// func WithStdOut(r io.ReadCloser) RunOption {
+// 	return func(rc *RunCfg) {
+// 		rc.Stdout = r
+// 	}
+// }
+//
+// // WithStdErr Sets the writer to send results sent to stderr
+// // for example to suppress stderr could provide `WithStdOut(ioutil.Discard)`
+// func WithStdErr(r io.ReadCloser) RunOption {
+// 	return func(rc *RunCfg) {
+// 		rc.Stdout = r
+// 	}
+// }
+//
+// // WithStdin Sets the writer to send information the stdin. Not all R commands
+// // accept stdin.
+// func WithStdin(w io.WriteCloser) RunOption {
+// 	return func(rc *RunCfg) {
+// 		rc.Stdin = w
+// 	}
+// }
 
 // WithPrefix sets a prefix string before any message is sent to the stdout/stderr writers
 // This is useful when printing concurrent results out and want to differentiate
@@ -99,31 +99,20 @@ func StartR(
 	dir string, // this should be put into RSettings
 	cmdArgs []string,
 	rc RunCfg,
-) error {
+) (*pipes.Pipes, error) {
 	envVars, err := configureEnv(os.Environ(), &rs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
-	_, err = capture.Start(ctx, rpath, cmdArgs...)
+	p, err := capture.Start(ctx, rpath, cmdArgs...)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	cmd := exec.CommandContext(
-		ctx,
-		rs.R(runtime.GOOS, rc.Script),
-		cmdArgs...,
-	)
-
-	cmd.Dir = dir
-	cmd.Env = envVars
-	cmd.Stdout = rc.Stdout
-	cmd.Stderr = rc.Stderr
-	cmd.Stdin = rc.Stdin
-	return cmd.Run()
+	return p, nil
 }
 
 // RunR runs a non-interactive R command and streams back the results of
@@ -131,26 +120,30 @@ func StartR(
 // RunR returns the exit code of the process and and error, if relevant
 func RunR(
 	ctx context.Context,
-	rs RSettings,
+	rs *RSettings,
 	dir string,
 	cmdArgs []string,
-	rc RunCfg,
-) (int, error) {
-	envVars, err := configureEnv(os.Environ(), &rs)
+	rc *RunCfg,
+) (*pipes.Pipes, int, error) {
+	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
-		return 0, err
+		return nil, 0, err
 	}
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
 	p, err := capture.Start(ctx, rpath, cmdArgs...)
 	if err != nil {
-		log.Fatal(err)
+		return p, 0, err
 	}
 
-	if err != nil {
-		return 0, err
-	}
+	// Assign pipe's original out err to locals
+	sout, serr := p.Stdout, p.Stderr
+
+	// Read both streams into one
+	mr := io.MultiReader(sout, serr)
+
+	// filter results
 
 	var fns []writers.FilterFunc
 
@@ -162,22 +155,18 @@ func RunR(
 		fns = append(fns, writers.NewPrefixFilter(rc.Prefix))
 	}
 
-	filter := writers.NewFilter(rc.Stdout, fns...)
+	// Create a pipe to keep stdout fed with merged out/err stream
+	pipeReader, PipeWriter := io.Pipe()
 
-	stdoutScanner := bufio.NewScanner(p.Stdout) // Notice that this is not in a loop
-	go func() {
-		for stdoutScanner.Scan() {
-			_, err := filter.Write(stdoutScanner.Bytes())
-			if err != nil {
-				break
-			}
-		}
-	}()
+	writeFilter := writers.NewFilter(PipeWriter, fns...)
 
-	stderrScanner := bufio.NewScanner(p.Stderr) // Notice that this is not in a loop
+	// re-assign the pipe to stdout on p
+	p.Stdout = pipeReader
+
+	scanner := bufio.NewScanner(mr) // Notice that this is not in a loop
 	go func() {
-		for stderrScanner.Scan() {
-			_, err := filter.Write(stdoutScanner.Bytes())
+		for scanner.Scan() {
+			_, err := writeFilter.Write(scanner.Bytes())
 			if err != nil {
 				break
 			}
@@ -185,29 +174,49 @@ func RunR(
 	}()
 
 	if err = p.Stdin.Close(); err != nil {
-		return 0, err
+		return p, 0, err
 	}
 
 	if err = capture.Stop(); err != nil {
-		return 0, err
+		return p, 0, err
 	}
 
-	return capture.ExitCode, nil
+	return p, capture.ExitCode, nil
 }
 
 // RunRWithOutput runs a non-interactive R command and returns the combined output
-func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...string) (*command.Capture, error) {
+func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...string) ([]byte, *command.Capture, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	name := rs.R(runtime.GOOS, false)
 
-	return run(ctx, envVars, dir, name, args...)
+	return combinedOutput(ctx, envVars, dir, name, args...)
 }
 
-func run(ctx context.Context, env []string, dir string, name string, args ...string) (*command.Capture, error) {
+func run(ctx context.Context, env []string, dir string, name string, args ...string) (*pipes.Pipes, *command.Capture, error) {
 	cmd := command.New(command.WithEnv(env), command.WithDir(dir))
-	err := cmd.Run(ctx, name, args...)
-	return cmd, err
+	ps, err := cmd.Run(ctx, name, args...)
+	return ps, cmd, err
+}
+
+func combinedOutput(ctx context.Context, env []string, dir string, name string, args ...string) ([]byte, *command.Capture, error) {
+	capture := command.New(command.WithEnv(env), command.WithDir(dir))
+	co, err := capture.CombinedOutput(ctx, name, args...)
+
+	return co, capture, err
+}
+
+type RCapture struct {
+	*command.Capture
+}
+
+func (rs *RSettings) Run(ctx context.Context, rc *RunCfg, dir string, args ...string) (*pipes.Pipes, *command.Capture, error) {
+	envVars, err := configureEnv(os.Environ(), rs)
+	if err != nil {
+		return nil, nil, err
+	}
+	name := rs.R(runtime.GOOS, false)
+	return run(ctx, envVars, dir, name, args...)
 }

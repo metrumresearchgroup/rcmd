@@ -65,7 +65,8 @@ func Test_Filters(tt *testing.T) {
 					}
 				}()
 			}
-			w := &bytes.Buffer{}
+			w := &nopcloser{&bytes.Buffer{}}
+
 			sut := writers.NewFilter(w, test.args.filters...)
 			n, err := sut.Write([]byte(test.msg))
 			t.ValidateError("no error", test.wantErr, err)
@@ -76,4 +77,13 @@ func Test_Filters(tt *testing.T) {
 			t.A.Equal(test.want, string(bs))
 		})
 	}
+}
+
+type nopcloser struct {
+	*bytes.Buffer
+}
+
+func (nc *nopcloser) Close() error {
+	//nop
+	return nil
 }

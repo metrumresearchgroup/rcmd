@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/metrumresearchgroup/wrapt"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,14 +52,15 @@ https://www.gnu.org/licenses/.
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			t := wrapt.WrapT(t)
 
-			got, err := tt.args.rs.RunRWithOutput(context.Background(), "", tt.args.cmdArgs...)
+			co, _, err := test.args.rs.RunRWithOutput(context.Background(), "", test.args.cmdArgs...)
 			assert.Equal(t, nil, err, "error")
 
-			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(got.Output), string(tt.want))
-			assert.True(t, bytes.HasPrefix(got.Output, []byte("R version")), msg)
+			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(co), string(test.want))
+			assert.True(t, bytes.HasPrefix(co, []byte("R version")), msg)
 
 		})
 	}
@@ -70,7 +72,7 @@ func BenchmarkRunR(b *testing.B) {
 		b.Fatalf("non-nil err: %v", err)
 	}
 	for n := 0; n < b.N; n++ {
-		_, err := rs.RunRWithOutput(context.Background(), "", "--version")
+		_, _, err := rs.RunRWithOutput(context.Background(), "", "--version")
 		if err != nil {
 			b.Fatalf("caught error: %v", err)
 		}

@@ -9,14 +9,14 @@ import (
 )
 
 type Filter struct {
-	w   io.Writer
+	w   io.WriteCloser
 	ffs []FilterFunc
 	m   *sync.Mutex
 }
 
 type FilterFunc func([]byte) []byte
 
-func NewFilter(w io.Writer, filters ...FilterFunc) *Filter {
+func NewFilter(w io.WriteCloser, filters ...FilterFunc) *Filter {
 	f := &Filter{
 		w:   w,
 		ffs: filters,
@@ -35,6 +35,10 @@ func (f *Filter) Write(p []byte) (n int, err error) {
 	}
 
 	return f.filterLines(p)
+}
+
+func (f *Filter) Close() error {
+	return f.w.Close()
 }
 
 var LineRegEx = regexp.MustCompile(`^\s*\[\d+]\s*`)
