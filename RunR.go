@@ -114,29 +114,7 @@ func StartR(
 
 	return p, nil
 }
-
-// RunR runs a non-interactive R command and streams back the results of
-// the stderr and stdout to the RunCfg writers.
-// RunR returns the exit code of the process and and error, if relevant
-func RunR(
-	ctx context.Context,
-	rs *RSettings,
-	dir string,
-	cmdArgs []string,
-	rc *RunCfg,
-) (*pipes.Pipes, int, error) {
-	envVars, err := configureEnv(os.Environ(), rs)
-	if err != nil {
-		return nil, 0, err
-	}
-	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
-
-	rpath := rs.R(runtime.GOOS, rc.Script)
-	p, err := capture.Start(ctx, rpath, cmdArgs...)
-	if err != nil {
-		return p, 0, err
-	}
-
+func (rc *RunCfg) configPipe(p *pipes.Pipes) {
 	// Assign pipe's original out err to locals
 	sout, serr := p.Stdout, p.Stderr
 
@@ -172,6 +150,31 @@ func RunR(
 			}
 		}
 	}()
+}
+
+// RunR runs a non-interactive R command and streams back the results of
+// the stderr and stdout to the RunCfg writers.
+// RunR returns the exit code of the process and and error, if relevant
+func RunR(
+	ctx context.Context,
+	rs *RSettings,
+	dir string,
+	cmdArgs []string,
+	rc *RunCfg,
+) (*pipes.Pipes, int, error) {
+	envVars, err := configureEnv(os.Environ(), rs)
+	if err != nil {
+		return nil, 0, err
+	}
+	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
+
+	rpath := rs.R(runtime.GOOS, rc.Script)
+	p, err := capture.Start(ctx, rpath, cmdArgs...)
+	if err != nil {
+		return p, 0, err
+	}
+
+	rc.configPipe(p)
 
 	if err = p.Stdin.Close(); err != nil {
 		return p, 0, err
