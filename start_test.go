@@ -1,4 +1,4 @@
-package start
+package rcmd
 
 import (
 	"context"
@@ -12,34 +12,33 @@ import (
 	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/metrumresearchgroup/rcmd"
 	"github.com/metrumresearchgroup/rcmd/rp"
 )
 
 func Test_startR_example(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	rs, err := rcmd.NewRSettings("R")
+	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
-	_, err = rs.StartR(context.Background(), rcmd.NewRunConfig(rcmd.WithPrefix("foo")), "")
+	_, err = rs.StartR(context.Background(), NewRunConfig(WithPrefix("foo")), "")
 	t.A.NoError(err)
 }
 
 func Test_startR_example2(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	rs, err := rcmd.NewRSettings("R")
+	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
-	_, err = rs.StartR(context.Background(), rcmd.NewRunConfig(), "", "-e", "2+2", "slave")
+	_, err = rs.StartR(context.Background(), NewRunConfig(), "", "-e", "2+2", "slave")
 	t.A.NoError(err)
 }
 
 func Test_runR_expression(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	rs, err := rcmd.NewRSettings("R")
+	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
 	ps, _, err := rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave")
@@ -54,7 +53,7 @@ func Test_runR_expression(tt *testing.T) {
 func Test_runRWithOutput_example(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	rs, err := rcmd.NewRSettings("R")
+	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
 	bs, _, err := rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave", "--interactive")
@@ -64,7 +63,7 @@ func Test_runRWithOutput_example(tt *testing.T) {
 
 	fmt.Println("----with prefix----")
 
-	rs, err = rcmd.NewRSettings("R")
+	rs, err = NewRSettings("R")
 	t.A.NoError(err)
 
 	bs, _, err = rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave", "--interactive")
@@ -76,13 +75,13 @@ func Test_runRWithOutput_example(tt *testing.T) {
 func Test_runR_exampleTimeout(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	rs, err := rcmd.NewRSettings("R")
+	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
 	ctx, ccl := context.WithTimeout(context.Background(), 1*time.Second)
 	defer ccl()
 
-	_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
+	_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
 	t.A.NoError(err)
 
 	fmt.Println(res)
@@ -97,10 +96,10 @@ func Test_runR_exampleCancel(tt *testing.T) {
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		rs, err := rcmd.NewRSettings("R")
+		rs, err := NewRSettings("R")
 		t.A.NoError(err)
 
-		_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
+		_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
 		t.A.NoError(err)
 
 		fmt.Println("go routine 1: ", res)
@@ -108,10 +107,10 @@ func Test_runR_exampleCancel(tt *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		rs, err := rcmd.NewRSettings("R")
+		rs, err := NewRSettings("R")
 		t.A.NoError(err)
 
-		_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive")
+		_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive")
 		t.A.NoError(err)
 		if err != nil {
 			log.Error("goroutine 2 error:", err)
@@ -123,9 +122,9 @@ func Test_runR_exampleCancel(tt *testing.T) {
 	}()
 	go func() {
 		defer wg.Done()
-		rs, err := rcmd.NewRSettings("R")
+		rs, err := NewRSettings("R")
 		t.A.NoError(err)
-		_, res, err := rs.RunR(ctx, rcmd.NewRunConfig(), "", "-e", "Sys.sleep(1); 2+2", "--slave", "--interactive")
+		_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1); 2+2", "--slave", "--interactive")
 		t.A.NoError(err)
 
 		if err != nil {
@@ -139,8 +138,8 @@ func Test_runR_exampleCancel(tt *testing.T) {
 
 func runR_examplepkg() {
 	dir, _ := homedir.Expand("~/metrum/metrumresearchgroup/rbabylon")
-	rs, err := rcmd.NewRSettings("R")
-	_, res, err := rs.RunR(context.Background(), rcmd.NewRunConfig(), dir, "-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive")
+	rs, err := NewRSettings("R")
+	_, res, err := rs.RunR(context.Background(), NewRunConfig(), dir, "-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive")
 	if err != nil {
 		panic(err)
 	}
