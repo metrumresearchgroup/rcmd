@@ -1,27 +1,27 @@
 package rcmd
 
-// CmdResult stores information about the executed cmd
+// CmdResult stores information about the executed cmd.
 type CmdResult struct {
 	Stdout   string `json:"stdout,omitempty"`
 	Stderr   string `json:"stderr,omitempty"`
 	ExitCode int    `json:"exit_code,omitempty"`
 }
 
-// ExecSettings controls settings related to R execution
+// ExecSettings controls settings related to R execution.
 type ExecSettings struct {
 	WorkDir string `json:"work_dir,omitempty"`
 }
 
-// RVersion contains information about the R version
+// RVersion contains information about the R version.
 type RVersion struct {
 	Major int
 	Minor int
 	Patch int
 }
 
-// RSettings controls settings related to managing libraries
-// if AsUser is set, R will be run as the user would launch from their normal session
-// with no interception/injection of library paths or environment variables for R_LIBS_SITE and R_LIBS_USER
+// RSettings controls settings related to managing libraries.
+// if AsUser is set, R will be run as the user would launch from their normal session.
+// with no interception/injection of library paths or environment variables for R_LIBS_SITE and R_LIBS_USER.
 type RSettings struct {
 	AsUser   bool     `json:"as_user,omitempty"`
 	Version  RVersion `json:"r_version,omitempty"`
@@ -30,7 +30,7 @@ type RSettings struct {
 	Platform string   `json:"platform,omitempty"`
 }
 
-// InstallArgs represents the installation arguments R CMD INSTALL can consume
+// InstallArgs represents the installation arguments R CMD INSTALL can consume.
 type InstallArgs struct {
 	Clean          bool `rcmd:"clean"`
 	Preclean       bool `rcmd:"preclean"`
@@ -45,7 +45,7 @@ type InstallArgs struct {
 	ByteCompile    bool `rcmd:"byte-compile"`
 	NoTestLoad     bool `rcmd:"no-test-load"`
 	NoCleanOnError bool `rcmd:"no-clean-on-error"`
-	//set
+	// set
 	Library string `rcmd:"library=%s,fmt"`
 }
 
@@ -70,13 +70,14 @@ type CheckArgs struct {
 	Library string `rcmd:"library=%s,fmt"`
 }
 
-// Nvp name-value pair, each of type string
+// Nvp name-value pair, each of type string.
 type Nvp struct {
 	Name  string `json:"global_env_vars_name,omitempty"`
 	Value string `json:"global_env_vars_value,omitempty"`
 }
 
-// NvpList is a slice of Nvp. The slice maintains consistent ordering of the Nvp objects
+// NvpList is a slice of Nvp. The slice maintains consistent ordering of
+// the Nvp objects.
 type NvpList struct {
 	Pairs []Nvp `json:"pairs,omitempty"`
 }

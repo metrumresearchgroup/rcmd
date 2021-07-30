@@ -4,13 +4,13 @@ package rcmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/metrumresearchgroup/wrapt"
-	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/metrumresearchgroup/rcmd/rp"
@@ -22,7 +22,10 @@ func Test_startR_example(tt *testing.T) {
 	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
-	_, err = rs.StartR(context.Background(), NewRunConfig(WithPrefix("foo")), "")
+	p, stop, err := rs.StartR(context.Background(), NewRunConfig(WithPrefix("foo")), "")
+	t.A.NoError(err)
+	defer fmt.Println(stop())
+	_, err = io.ReadAll(p.Stdout)
 	t.A.NoError(err)
 }
 
@@ -32,8 +35,9 @@ func Test_startR_example2(tt *testing.T) {
 	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
-	_, err = rs.StartR(context.Background(), NewRunConfig(), "", "-e", "2+2", "slave")
+	_, stop, err := rs.StartR(context.Background(), NewRunConfig(), "", "-e", "2+2", "slave")
 	t.A.NoError(err)
+	defer fmt.Println(stop())
 }
 
 func Test_runR_expression(tt *testing.T) {
@@ -42,7 +46,7 @@ func Test_runR_expression(tt *testing.T) {
 	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
-	ps, _, err := rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave")
+	ps, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "-e", "2+2", "--slave")
 	t.A.NoError(err)
 
 	lines, err := rp.ScanLines(ps)
@@ -57,7 +61,7 @@ func Test_runRWithOutput_example(tt *testing.T) {
 	rs, err := NewRSettings("R")
 	t.A.NoError(err)
 
-	bs, _, err := rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave", "--interactive")
+	bs, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
 	t.A.NoError(err)
 
 	fmt.Println(string(bs))
@@ -67,7 +71,7 @@ func Test_runRWithOutput_example(tt *testing.T) {
 	rs, err = NewRSettings("R")
 	t.A.NoError(err)
 
-	bs, _, err = rs.RunRWithOutput(context.Background(), "", "-e", "2+2", "--slave", "--interactive")
+	bs, err = rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
 	t.A.NoError(err)
 
 	fmt.Println(string(bs))
@@ -82,7 +86,9 @@ func Test_runR_exampleTimeout(tt *testing.T) {
 	ctx, ccl := context.WithTimeout(context.Background(), 1*time.Second)
 	defer ccl()
 
-	_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
+	p, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
+	t.A.NoError(err)
+	_, err = io.ReadAll(p.Stdout)
 	t.A.NoError(err)
 
 	fmt.Println(res)
@@ -119,7 +125,6 @@ func Test_runR_exampleCancel(tt *testing.T) {
 			cancel()
 		}
 		fmt.Println("go routine 2 res: ", res)
-
 	}()
 	go func() {
 		defer wg.Done()
@@ -135,14 +140,4 @@ func Test_runR_exampleCancel(tt *testing.T) {
 	}()
 	wg.Wait()
 	fmt.Println("completed everything....")
-}
-
-func runR_examplepkg() {
-	dir, _ := homedir.Expand("~/metrum/metrumresearchgroup/rbabylon")
-	rs, err := NewRSettings("R")
-	_, res, err := rs.RunR(context.Background(), NewRunConfig(), dir, "-e", "options(crayon.enabled = TRUE); devtools::test()", "--slave", "--interactive")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(res)
 }

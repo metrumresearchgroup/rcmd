@@ -10,7 +10,7 @@ import (
 )
 
 // ScanLines scans lines from Rscript output and returns an array with
-// the line numbers removed and whitespace trimmed
+// the line numbers removed and whitespace trimmed.
 func ScanLines(b []byte) ([]string, error) {
 	return ScanROutput(b, false)
 }
@@ -55,5 +55,6 @@ func ScanROutput(b []byte, outputOnly bool) ([]string, error) {
 	}
 
 	wg.Wait()
+
 	return lines, nil
 }

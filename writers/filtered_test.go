@@ -10,7 +10,6 @@ import (
 )
 
 func Test_Filters(tt *testing.T) {
-
 	type args struct {
 		filters []writers.FilterFunc
 	}

@@ -56,12 +56,11 @@ https://www.gnu.org/licenses/.
 		t.Run(test.name, func(tt *testing.T) {
 			t := wrapt.WrapT(t)
 
-			co, _, err := test.args.rs.RunRWithOutput(context.Background(), "", test.args.cmdArgs...)
+			co, err := test.args.rs.RunRWithOutput(context.Background(), NewRunConfig(), "", test.args.cmdArgs...)
 			assert.Equal(t, nil, err, "error")
 
 			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(co), string(test.want))
 			assert.True(t, bytes.HasPrefix(co, []byte("R version")), msg)
-
 		})
 	}
 }
@@ -72,7 +71,7 @@ func BenchmarkRunR(b *testing.B) {
 		b.Fatalf("non-nil err: %v", err)
 	}
 	for n := 0; n < b.N; n++ {
-		_, _, err := rs.RunRWithOutput(context.Background(), "", "--version")
+		_, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version")
 		if err != nil {
 			b.Fatalf("caught error: %v", err)
 		}

@@ -14,14 +14,14 @@ import (
 	"github.com/metrumresearchgroup/rcmd/writers"
 )
 
-// RunCfg contains the configuration for use when executing a run
+// RunCfg contains the configuration for use when executing a run.
 type RunCfg struct {
 	Prefix           string
 	StripLineNumbers bool
 	Script           bool
 }
 
-// RunOption are specific run option funcs to change configuration
+// RunOption are specific run option funcs to change configuration.
 type RunOption func(*RunCfg)
 
 func NewRunConfig(opts ...RunOption) *RunCfg {
@@ -33,10 +33,11 @@ func NewRunConfig(opts ...RunOption) *RunCfg {
 	for _, opt := range opts {
 		opt(cfg)
 	}
+
 	return cfg
 }
 
-// WithScript sets whether the output will be a call to R or Rscript
+// WithScript sets whether the output will be a call to R or Rscript.
 func WithScript(s bool) RunOption {
 	return func(r *RunCfg) {
 		r.Script = s
@@ -44,7 +45,7 @@ func WithScript(s bool) RunOption {
 }
 
 // WithLineNumbers controls whether to keep the leading line numbers
-// R includes in all outputs under the format [<num>] <output>
+// R includes in all outputs under the format [<num>] <output>.
 func WithLineNumbers(ln bool) RunOption {
 	return func(r *RunCfg) {
 		r.StripLineNumbers = !ln
@@ -53,7 +54,7 @@ func WithLineNumbers(ln bool) RunOption {
 
 // WithPrefix sets a prefix string before any message is sent to the stdout/stderr writers
 // This is useful when printing concurrent results out and want to differentiate
-// where messages are coming from
+// where messages are coming from.
 func WithPrefix(prefix string) RunOption {
 	return func(r *RunCfg) {
 		r.Prefix = prefix
@@ -62,20 +63,22 @@ func WithPrefix(prefix string) RunOption {
 
 // StartR launches an interactive R console given the same
 // configuration as a specific package.
-func (rs *RSettings) StartR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*pipes.Pipes, error) {
+func (rs *RSettings) StartR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*pipes.Pipes, func() error, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
 	p, err := capture.Start(ctx, rpath, cmdArgs...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return p, nil
+	return p, func() error {
+		return capture.Stop()
+	}, nil
 }
 
 func (rc *RunCfg) configPipe(p *pipes.Pipes) {
@@ -118,7 +121,7 @@ func (rc *RunCfg) configPipe(p *pipes.Pipes) {
 
 // RunR runs a non-interactive R command and streams back the results of
 // the stderr and stdout to the RunCfg writers.
-// RunR returns the exit code of the process and and error, if relevant
+// RunR returns the exit code of the process and and error, if relevant.
 func (rs *RSettings) RunR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*pipes.Pipes, int, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
@@ -145,13 +148,13 @@ func (rs *RSettings) RunR(ctx context.Context, rc *RunCfg, dir string, cmdArgs .
 	return p, capture.ExitCode, nil
 }
 
-// RunRWithOutput runs a non-interactive R command and returns the combined output
-func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...string) ([]byte, *command.Capture, error) {
+// RunRWithOutput runs a non-interactive R command and returns the combined output.
+func (rs *RSettings) RunRWithOutput(ctx context.Context, rc *RunCfg, dir string, args ...string) ([]byte, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	name := rs.R(runtime.GOOS, false)
+	name := rs.R(runtime.GOOS, rc.Script)
 
 	return combinedOutput(ctx, envVars, dir, name, args...)
 }
@@ -159,25 +162,27 @@ func (rs *RSettings) RunRWithOutput(ctx context.Context, dir string, args ...str
 func run(ctx context.Context, env []string, dir string, name string, args ...string) (*pipes.Pipes, *command.Capture, error) {
 	cmd := command.New(command.WithEnv(env), command.WithDir(dir))
 	ps, err := cmd.Run(ctx, name, args...)
+
 	return ps, cmd, err
 }
 
-func combinedOutput(ctx context.Context, env []string, dir string, name string, args ...string) ([]byte, *command.Capture, error) {
+func combinedOutput(ctx context.Context, env []string, dir string, name string, args ...string) ([]byte, error) {
 	capture := command.New(command.WithEnv(env), command.WithDir(dir))
 	co, err := capture.CombinedOutput(ctx, name, args...)
 
-	return co, capture, err
+	return co, err
 }
 
 type RCapture struct {
 	*command.Capture
 }
 
-func (rs *RSettings) Run(ctx context.Context, rc *RunCfg, dir string, args ...string) (*pipes.Pipes, *command.Capture, error) {
+func (rs *RSettings) Run(ctx context.Context, _ *RunCfg, dir string, args ...string) (*pipes.Pipes, *command.Capture, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
 		return nil, nil, err
 	}
 	name := rs.R(runtime.GOOS, false)
+
 	return run(ctx, envVars, dir, name, args...)
 }

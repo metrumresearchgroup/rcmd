@@ -10,20 +10,22 @@ import (
 	"github.com/metrumresearchgroup/rcmd/rp"
 )
 
-// NewRSettings initializes RSettings
+// NewRSettings initializes RSettings.
 func NewRSettings(rPath string) (*RSettings, error) {
 	rs := RSettings{
 		RPath: rPath,
 	}
-	// since we have the path in the constructor, we might as well get the R version now too
-	_, err := rs.getRVersion()
-	if err != nil {
+	// since we have the path in the constructor, we might as well get the
+	// R version now too
+
+	if _, err := rs.getRVersion(); err != nil {
 		return nil, err
 	}
+
 	return &rs, nil
 }
 
-// R provides a cleaned path to the R executable
+// R provides a cleaned path to the R executable.
 func (rs RSettings) R(os string, script bool) string {
 	r := "R"
 
@@ -44,6 +46,7 @@ func (rs RSettings) R(os string, script bool) string {
 	if os == "windows" && !strings.HasSuffix(r, ".exe") {
 		r = r + ".exe"
 	}
+
 	return r
 }
 
@@ -51,7 +54,7 @@ func (rs RSettings) R(os string, script bool) string {
 // unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
 // as if it is not defined, it will shell out to R to determine the version, and mutate itself
 // to set that value, while also returning the RVersion.
-// This will keep any program using rs from needing to shell out multiple times
+// This will keep any program using rs from needing to shell out multiple times.
 func (rs *RSettings) getRVersion() (*RVersion, error) {
 	if rs.Version.ToString() != "0.0" {
 		version := rs.Version
@@ -59,7 +62,7 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 		return &version, nil
 	}
 
-	co, _, err := rs.RunRWithOutput(context.Background(), "", "--version", "--vanilla")
+	co, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version", "--vanilla")
 	if err != nil {
 		return nil, err
 	}
@@ -116,10 +119,11 @@ func parseVersionData(data []byte) (version *RVersion, platform string, err erro
 			}
 		}
 	}
+
 	return version, platform, nil
 }
 
-// LibPathsEnv returns the library formatted in the style to be set as an environment variable
+// LibPathsEnv returns the library formatted in the style to be set as an environment variable.
 func (rs RSettings) LibPathsEnv() (string, bool) {
 	if len(rs.LibPaths) == 0 {
 		return "", false
@@ -127,5 +131,6 @@ func (rs RSettings) LibPathsEnv() (string, bool) {
 	if len(rs.LibPaths) == 1 && rs.LibPaths[0] == "" {
 		return "", false
 	}
+
 	return strings.Join(rs.LibPaths, ":"), true
 }

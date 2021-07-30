@@ -19,11 +19,14 @@ func TestAppend(t *testing.T) {
 			"append",
 		},
 	}
-	var nvpList NvpList
 	for _, tt := range tests {
-		nvpList := NvpAppend(nvpList, tt.name, tt.value)
-		assert.Equal(t, tt.name, nvpList.Pairs[0].Name, fmt.Sprintf("Fail: %s", tt.context))
-		assert.Equal(t, tt.value, nvpList.Pairs[0].Value, fmt.Sprintf("Fail: %s", tt.context))
+		t.Run(tt.context, func(t *testing.T) {
+			var nvpList NvpList
+
+			nvpList = NvpAppend(nvpList, tt.name, tt.value)
+			assert.Equal(t, tt.name, nvpList.Pairs[0].Name, fmt.Sprintf("Fail: %s", tt.context))
+			assert.Equal(t, tt.value, nvpList.Pairs[0].Value, fmt.Sprintf("Fail: %s", tt.context))
+		})
 	}
 }
 

@@ -20,7 +20,7 @@ var censoredVars = map[string]interface{}{
 }
 
 // sysEnvVars contains the default environment variables usually from
-// os.Environ()
+// os.Environ().
 func configureEnv(sysEnvVars []string, rs *RSettings) ([]string, error) {
 	if rs.AsUser {
 		return configureEnvAsUser(sysEnvVars, rs)
@@ -30,7 +30,7 @@ func configureEnv(sysEnvVars []string, rs *RSettings) ([]string, error) {
 }
 
 // sysEnvVars contains the default environment variables usually from
-// os.Environ()
+// os.Environ().
 func configureEnvAsNotUser(sysEnvVars []string, rs *RSettings) ([]string, error) {
 	evs := environ.New(sysEnvVars)
 	_, err := evs.Drop("R_LIBS_USER", "R_LIBS_SITE")
@@ -67,6 +67,7 @@ func prependPath(path string, rPath string) string {
 		path = fmt.Sprintf("%s:%s", rDir, path)
 		log.WithField("path", path).Debug("adding Rpath to front of system PATH")
 	}
+
 	return path
 }
 
@@ -85,7 +86,7 @@ func configureEnvAsUser(sysEnvVars []string, rs *RSettings) ([]string, error) {
 	return evs.AsSlice(), nil
 }
 
-// Returns the environment variables passed as a slice of name=value env strings
+// Returns the environment variables passed as a slice of name=value env strings.
 func censorEnvVars(nvp []string, add ...string) []string {
 	var es struct{}
 	var censoredString []string
@@ -105,5 +106,6 @@ func censorEnvVars(nvp []string, add ...string) []string {
 			censoredString = append(censoredString, v)
 		}
 	}
+
 	return censoredString
 }

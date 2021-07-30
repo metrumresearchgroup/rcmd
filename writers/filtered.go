@@ -46,8 +46,7 @@ var LineRegEx = regexp.MustCompile(`^\s*\[\d+]\s*`)
 func LineNumberStripper(bs []byte) []byte {
 	buf := bytes.Buffer{}
 
-	loc := LineRegEx.FindIndex(bs)
-	if loc != nil {
+	if loc := LineRegEx.FindIndex(bs); loc != nil {
 		buf.Write(bs[loc[1]:])
 	} else {
 		buf.Write(bs)

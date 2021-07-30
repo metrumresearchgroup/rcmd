@@ -50,6 +50,5 @@ func TestLineScanning(t *testing.T) {
 				t.A.Equal(test.expected, actual)
 			})
 		})
-
 	}
 }

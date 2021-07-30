@@ -189,7 +189,6 @@ func Test_configureEnv(tt *testing.T) {
 					})
 				} else {
 					t.Run("should not match", func(t *wrapt.T) {
-
 						if wantenv.Get("R_LIBS_USER") == gotenv.Get("R_LIBS_USER") {
 							t.Errorf("")
 						}
@@ -200,7 +199,7 @@ func Test_configureEnv(tt *testing.T) {
 	})
 }
 
-// Utility functions
+// Utility functions.
 func checkEnvVarsValid(t *wrapt.T, expected []string, actualResults []string) {
 	t.Helper()
 
