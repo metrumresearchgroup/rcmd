@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/metrumresearchgroup/wrapt"
 	log "github.com/sirupsen/logrus"
@@ -75,7 +76,8 @@ func Test_runRWithOutput_example(tt *testing.T) {
 
 	fmt.Println(string(bs))
 }
-/*
+
+
 func Test_runR_exampleTimeout(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
@@ -88,13 +90,12 @@ func Test_runR_exampleTimeout(tt *testing.T) {
 	p, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
 	t.A.NoError(err)
 
-
-	_, err = io.ReadAll(p.Stdout)
+	err = p.Stdin.Close()
 	t.A.NoError(err)
 
 	fmt.Println(res)
 }
-*/
+
 func Test_runR_exampleCancel(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
