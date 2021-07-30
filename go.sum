@@ -6,10 +6,14 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxv
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
 github.com/metrumresearchgroup/command v0.0.2-0.20210729170520-8e68b4e0c3a4 h1:5I9eNDpePTStutK+BTOOxKtzjnLkT1+VviiY5B4+e+g=
 github.com/metrumresearchgroup/command v0.0.2-0.20210729170520-8e68b4e0c3a4/go.mod h1:NEFCkFKZRvT/b9TZco88u3aMJA9NRCfwuSjVjvaiIA4=
+github.com/metrumresearchgroup/command v0.0.2-0.20210730184437-76180279d571 h1:m94Mb9NZFk+e94eZ3MP4hvZR29JOgk3o8ek81qGL4/k=
+github.com/metrumresearchgroup/command v0.0.2-0.20210730184437-76180279d571/go.mod h1:jE4HSIBPRdPFnQ3kM19z0jX68JmKWY2+iv4FJXZDU8s=
 github.com/metrumresearchgroup/environ v0.0.1 h1:sYu58eHZ/KdFFkl/SrYFT36cw6IRDdVHWxzF+/94HcY=
 github.com/metrumresearchgroup/environ v0.0.1/go.mod h1:Zx7pp9lB9kQ/WmS++Y3k2nUfcUAhIeqYKGFtir7VXlI=
 github.com/metrumresearchgroup/wrapt v0.0.0-20210726161850-4c2dca892a05 h1:6+f0lQIXLuc5WSKRzovI8weYP7xDGh1Y5/C7HKb4miQ=
 github.com/metrumresearchgroup/wrapt v0.0.0-20210726161850-4c2dca892a05/go.mod h1:7t+Vm+oTCTDtTCzek3ua7YJDov5GpUq5uCowxTi8x7s=
+github.com/metrumresearchgroup/wrapt v0.0.0-20210730170228-d0766c8ef5a6 h1:zfI1GfxBPrI0qwDpN4yTu9LY6jvRovB5zbwwygx7Wu8=
+github.com/metrumresearchgroup/wrapt v0.0.0-20210730170228-d0766c8ef5a6/go.mod h1:7t+Vm+oTCTDtTCzek3ua7YJDov5GpUq5uCowxTi8x7s=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

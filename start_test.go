@@ -29,6 +29,20 @@ func Test_startR_example(tt *testing.T) {
 	t.A.NoError(err)
 }
 
+func Test_RunR_example(tt *testing.T) {
+	t := wrapt.WrapT(tt)
+
+	rs, err := NewRSettings("R")
+	t.A.NoError(err)
+
+	p, n, err := rs.RunR(context.Background(), NewRunConfig(WithPrefix("foo")), "", "-e", "{2+2}")
+	t.A.NoError(err)
+	t.A.Equal(0, n)
+
+	_, err = io.ReadAll(p.Stdout)
+	t.A.NoError(err)
+}
+
 func Test_startR_example2(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
@@ -77,7 +91,6 @@ func Test_runRWithOutput_example(tt *testing.T) {
 	fmt.Println(string(bs))
 }
 
-
 func Test_runR_exampleTimeout(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
@@ -87,11 +100,8 @@ func Test_runR_exampleTimeout(tt *testing.T) {
 	ctx, ccl := context.WithTimeout(context.Background(), 1*time.Second)
 	defer ccl()
 
-	p, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
-	t.A.NoError(err)
-
-	err = p.Stdin.Close()
-	t.A.NoError(err)
+	_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1.5); 2+2", "--slave", "--interactive")
+	t.A.Error(err)
 
 	fmt.Println(res)
 }
@@ -108,9 +118,11 @@ func Test_runR_exampleCancel(tt *testing.T) {
 		rs, err := NewRSettings("R")
 		t.A.NoError(err)
 
-		_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
+		ps, stop, err := rs.StartR(ctx, NewRunConfig(), "", "-e", "2+2", "--slave", "--interactive")
 		t.A.NoError(err)
-
+		defer stop()
+		res, err := io.ReadAll(ps.Stdout)
+		t.A.NoError(err)
 		fmt.Println("go routine 1: ", res)
 	}()
 	go func() {
@@ -119,25 +131,30 @@ func Test_runR_exampleCancel(tt *testing.T) {
 		rs, err := NewRSettings("R")
 		t.A.NoError(err)
 
-		_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive")
+		ps, stop, err := rs.StartR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive")
 		t.A.NoError(err)
+		defer stop()
 		if err != nil {
 			log.Error("goroutine 2 error:", err)
 			log.Warn("cancelling ongoing work...")
 			cancel()
 		}
+		res, err := io.ReadAll(ps.Stdout)
+		t.A.NoError(err)
 		fmt.Println("go routine 2 res: ", res)
 	}()
 	go func() {
 		defer wg.Done()
 		rs, err := NewRSettings("R")
 		t.A.NoError(err)
-		_, res, err := rs.RunR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1); 2+2", "--slave", "--interactive")
+		ps, stop, err := rs.StartR(ctx, NewRunConfig(), "", "-e", "Sys.sleep(1); 2+2", "--slave", "--interactive")
 		t.A.NoError(err)
-
+		defer stop()
 		if err != nil {
 			log.Error("goroutine 3 error:", err)
 		}
+		res, err := io.ReadAll(ps.Stdout)
+		t.A.NoError(err)
 		fmt.Println("go routine 3 res: ", res)
 	}()
 	wg.Wait()
