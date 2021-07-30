@@ -120,7 +120,7 @@ func (rc *RunCfg) configPipe(p *pipes.Pipes) {
 }
 
 // RunR runs a non-interactive R command and streams back the results of
-// the stderr and stdout to the RunCfg writers.
+// the stderr and stdout to the *pipes.Pipes writers.
 // RunR returns the exit code of the process and and error, if relevant.
 func (rs *RSettings) RunR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*pipes.Pipes, int, error) {
 	envVars, err := configureEnv(os.Environ(), rs)

@@ -69,15 +69,3 @@ type CheckArgs struct {
 	//  library directory used for test installation of packages (default is outdir)
 	Library string `rcmd:"library=%s,fmt"`
 }
-
-// Nvp name-value pair, each of type string.
-type Nvp struct {
-	Name  string `json:"global_env_vars_name,omitempty"`
-	Value string `json:"global_env_vars_value,omitempty"`
-}
-
-// NvpList is a slice of Nvp. The slice maintains consistent ordering of
-// the Nvp objects.
-type NvpList struct {
-	Pairs []Nvp `json:"pairs,omitempty"`
-}
