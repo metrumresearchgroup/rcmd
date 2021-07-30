@@ -1,3 +1,4 @@
+// +Build R
 package rcmd
 
 import (
