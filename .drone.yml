@@ -15,7 +15,7 @@ steps:
       - name: docker.sock
         path: /var/run/docker.sock
   - name: test
-    image: r-dev-ci:4.1.0
+    image: 906087756158.dkr.ecr.us-east-1.amazonaws.com/r-dev-ci:4.1.0
     commands:
       - go mod tidy
       - go mod download
