@@ -10,15 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var censoredVars = map[string]interface{}{
-	"GITHUB_TOKEN":      nil,
-	"GITHUB_PAT":        nil,
-	"GHE_TOKEN":         nil,
-	"GHE_PAT":           nil,
-	"AWS_ACCESS_KEY_ID": nil,
-	"AWS_SECRET_KEY":    nil,
-}
-
 // sysEnvVars contains the default environment variables usually from
 // os.Environ().
 func configureEnv(sysEnvVars []string, rs *RSettings) ([]string, error) {
@@ -84,28 +75,4 @@ func configureEnvAsUser(sysEnvVars []string, rs *RSettings) ([]string, error) {
 	}
 
 	return evs.AsSlice(), nil
-}
-
-// Returns the environment variables passed as a slice of name=value env strings.
-func censorEnvVars(nvp []string, add ...string) []string {
-	var es struct{}
-	var censoredString []string
-	addlCensoredVars := make(map[string]struct{})
-	if len(add) != 0 {
-		for _, v := range add {
-			addlCensoredVars[strings.ToUpper(v)] = es
-		}
-	}
-	for _, v := range nvp {
-		evs := strings.SplitN(v, "=", 2)
-		_, present := censoredVars[strings.ToUpper(evs[0])]
-		_, presentAddl := addlCensoredVars[strings.ToUpper(evs[0])]
-		if present || presentAddl {
-			censoredString = append(censoredString, fmt.Sprintf("%s=%s", evs[0], "***HIDDEN***"))
-		} else {
-			censoredString = append(censoredString, v)
-		}
-	}
-
-	return censoredString
 }

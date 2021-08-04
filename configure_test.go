@@ -98,62 +98,6 @@ func TestConfigureArgs1(t *testing.T) {
 	}
 }
 
-func TestConfigureArgs2(t *testing.T) {
-	var tests = []configureArgsTestCase{
-		{
-			context: "variety of spellings",
-			input: []string{
-				"R_LIBS_USER=some/path",
-				"GITHUB_PAT=should_get_hidden1",
-				"ghe_token=should_get_hidden2",
-				"ghe_PAT=should_get_hidden3",
-				"github_token=should_get_hidden4",
-				"AWS_ACCESS_KEY_ID=should_get_hidden5",
-				"AWS_SECRET_KEY=should_get_hidden6",
-				"ADDL_ARG=could-be-secret",
-			},
-			expected: []string{
-				"R_LIBS_USER=some/path",
-				"GITHUB_PAT=***HIDDEN***",
-				"ghe_token=***HIDDEN***",
-				"ghe_PAT=***HIDDEN***",
-				"github_token=***HIDDEN***",
-				"AWS_ACCESS_KEY_ID=***HIDDEN***",
-				"AWS_SECRET_KEY=***HIDDEN***",
-				"ADDL_ARG=could-be-secret",
-			},
-		},
-	}
-	for _, test := range tests {
-		actual := censorEnvVars(test.input)
-		assert.Equal(t, test.expected, actual, test.context)
-	}
-}
-
-func TestConfigureArgsAddl(t *testing.T) {
-	var tests = []configureArgsTestCase{
-		{
-			context: "additional hidden",
-			input: []string{
-				"R_LIBS_USER=some/path",
-				"GITHUB_PAT=should_get_hidden1",
-				"ADDL_ARG=could-be-secret",
-			},
-			expected: []string{
-				"R_LIBS_USER=some/path",
-				"GITHUB_PAT=***HIDDEN***",
-				"ADDL_ARG=***HIDDEN***",
-			},
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.context, func(t *testing.T) {
-			actual := censorEnvVars(test.input, "ADDL_ARG")
-			assert.Equal(t, test.expected, actual, test.context)
-		})
-	}
-}
-
 func Test_configureEnv(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
