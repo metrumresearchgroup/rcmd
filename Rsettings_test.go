@@ -1,50 +1,56 @@
 package rcmd
 
 import (
-	"fmt"
 	"runtime"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/metrumresearchgroup/wrapt"
 )
 
 func TestLibPathsEnv(t *testing.T) {
-	var libPathTests = []struct {
+	var tests = []struct {
+		name     string
 		in       RSettings
 		expected string
 	}{
 		{
-			RSettings{
+			name: "path found",
+			in: RSettings{
 				LibPaths: []string{
 					// TODO: check if paths need to be checked for trailing /
 					"path/to/folder1/",
 					"path/to/folder2/",
 				},
 			},
-			"R_LIBS_SITE=path/to/folder1/:path/to/folder2/",
+			expected: "path/to/folder1/:path/to/folder2/",
 		},
 		{
-			RSettings{
+			name: "empty paths",
+			in: RSettings{
 				LibPaths: []string{},
 			},
-			"",
+			expected: "",
 		},
 	}
-	for _, tt := range libPathTests {
-		ok, actual := tt.in.LibPathsEnv()
-		if actual != "" && !ok {
-			t.Errorf("LibPaths present, should be ok")
-		}
-		if actual != tt.expected {
-			t.Errorf("GOT: %s, WANT: %s", actual, tt.expected)
-		}
+	for _, test := range tests {
+		t.Run(test.name, func(tt *testing.T) {
+			t := wrapt.WrapT(t)
+
+			actual, ok := test.in.LibPathsEnv()
+
+			if actual != "" && !ok {
+				t.Errorf("LibPaths exist but ok is false")
+			}
+
+			t.A.Equal(test.expected, actual)
+		})
 	}
 }
 
 func TestParseVersionData(t *testing.T) {
-	var rVersionTests = []struct {
+	var tests = []struct {
 		data     []byte
-		version  RVersion
+		version  *RVersion
 		platform string
 		message  string
 	}{
@@ -60,7 +66,7 @@ func TestParseVersionData(t *testing.T) {
 			https://www.gnu.org/licenses/.
 
 `),
-			version: RVersion{
+			version: &RVersion{
 				Major: 3,
 				Minor: 6,
 				Patch: 0,
@@ -80,7 +86,7 @@ For more information about these matters see
 http://www.gnu.org/licenses/.
 
 `),
-			version: RVersion{
+			version: &RVersion{
 				Major: 3,
 				Minor: 5,
 				Patch: 2,
@@ -93,7 +99,7 @@ http://www.gnu.org/licenses/.
 			R version 1.2.3 (2018-12-20) -- "name for Ubuntu"            
 			Platform: x86_64-pc-linux-gnu (64-bit)
 			`),
-			version: RVersion{
+			version: &RVersion{
 				Major: 1,
 				Minor: 2,
 				Patch: 3,
@@ -102,87 +108,87 @@ http://www.gnu.org/licenses/.
 			message:  "Manually built Ubuntu test",
 		},
 	}
-	for _, tt := range rVersionTests {
-		version, platform := parseVersionData(tt.data)
-		assert.Equal(t, tt.version, version, fmt.Sprintf("Version not equal: %s", tt.message))
-		assert.Equal(t, tt.platform, platform, fmt.Sprintf("Platform not equal: %s", tt.message))
+	for _, test := range tests {
+		t.Run(test.message, func(tt *testing.T) {
+			t := wrapt.WrapT(tt)
+
+			version, platform, err := parseVersionData(test.data)
+
+			t.A.NoError(err)
+			t.A.Equal(test.version, version)
+			t.A.Equal(test.platform, platform)
+		})
 	}
 }
 
 func TestRMethod(t *testing.T) {
-	var rTests = []struct {
+	var tests = []struct {
+		name     string
 		rpath    string
 		platform string
 		expected string
-		message  string
 	}{
 		{
+			name:     "windows - empty Rpath",
 			rpath:    "",
 			platform: "windows",
 			expected: "R.exe",
-			message:  "windows - empty Rpath",
 		},
 		{
+			name:     "windows - full Rpath",
 			rpath:    `C:\Program Files\R\R-3.5.2\bin\i386\R.exe`,
 			platform: "windows",
 			expected: `C:\Program Files\R\R-3.5.2\bin\i386\R.exe`,
-			message:  "windows - full Rpath",
 		},
 		{
+			name:     "windows - full Rpath, without exe extension",
 			rpath:    `C:\Program Files\R\R-3.5.2\bin\i386\R`,
 			platform: "windows",
 			expected: `C:\Program Files\R\R-3.5.2\bin\i386\R.exe`,
-			message:  "windows - full Rpath, without exe extension",
 		},
 		{
+			name:     "windows - R with exe extension",
 			rpath:    `R.exe`,
 			platform: "windows",
 			expected: `R.exe`,
-			message:  "windows - R with exe extension",
 		},
 		{
+			name:     "windows - R without extension",
 			rpath:    `R`,
 			platform: "windows",
 			expected: `R.exe`,
-			message:  "windows - R without extension",
 		},
 		{
+			name:     "darwin - empty Rpath",
 			rpath:    "",
 			platform: "darwin",
 			expected: "R",
-			message:  "darwin - empty Rpath",
 		},
 		{
+			name:     "darwin: full Rpath",
 			rpath:    "/usr/local/bin/R",
 			platform: "darwin",
 			expected: "/usr/local/bin/R",
-			message:  "darwin: full Rpath",
 		},
 		{
+			name:     "darwin: full Rpath, trailing /",
 			rpath:    "/usr/local/bin/R/",
 			platform: "darwin",
 			expected: "/usr/local/bin/R",
-			message:  "darwin: full Rpath, trailing /",
 		},
-		// {
-		// 	rpath:    "/R",
-		// 	platform: "darwin",
-		// 	expected: "/R",
-		// 	message:  "darwin: full Rpath, root R /",
-		// },
-		// {
-		// 	rpath:    "/R/",
-		// 	platform: "darwin",
-		// 	expected: "/R",
-		// 	message:  "darwin: full Rpath, root R / with trailing /",
-		// },
-		// TODO: linux tests
 	}
-	for _, tt := range rTests {
-		if tt.platform == runtime.GOOS {
-			rs := NewRSettings(tt.rpath)
-			r := rs.R(tt.platform, false)
-			assert.Equal(t, tt.expected, r, fmt.Sprintf("R not equal to <%s>. %s", tt.expected, tt.message))
+	for _, test := range tests {
+		if test.platform == runtime.GOOS {
+			t.Run(test.name, func(tt *testing.T) {
+				t := wrapt.WrapT(tt)
+
+				rs, err := NewRSettings(test.rpath)
+				t.A.NoError(err)
+
+				r := rs.R(test.platform, false)
+
+				t.A.Equal(test.expected, r)
+			})
 		}
 	}
 }

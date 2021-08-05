@@ -3,44 +3,58 @@ package rp
 import (
 	"bufio"
 	"bytes"
-	"regexp"
-	"strings"
+	"io"
+	"sync"
+
+	"github.com/metrumresearchgroup/rcmd/writers"
 )
 
-// R lines start with [<num>] Output
-var lineNumRegex = regexp.MustCompile("^\\s?\\[\\d+]")
-
-// StripLineNumber strips the leading line number R console
-func StripLineNumber(s string) string {
-	res := lineNumRegex.ReplaceAllString(s, "")
-	return strings.TrimSpace(res)
-}
-
 // ScanLines scans lines from Rscript output and returns an array with
-// the line numbers removed and whitespace trimmed
-func ScanLines(b []byte) []string {
+// the line numbers removed and whitespace trimmed.
+func ScanLines(b []byte) ([]string, error) {
 	return ScanROutput(b, false)
 }
 
-// Scans lines from RScript output and returns an array with
+// ScanROutput scans lines from RScript output and returns an array with
 // the line numbers removed, whitespace trimmed, and (optionally)
 // with all input-like lines (which start with ">") excluded.
-func ScanROutput(b []byte, outputOnly bool) []string {
-	scanner := bufio.NewScanner(bytes.NewBuffer(b))
-	output := []string{}
-	for scanner.Scan() {
-		newLine := StripLineNumber(scanner.Text())
-
-		var keepLine bool
-		if outputOnly {
-			keepLine = newLine != "" && !strings.HasPrefix(newLine, ">")
-		} else {
-			keepLine = newLine != ""
-		}
-
-		if keepLine {
-			output = append(output, newLine)
-		}
+func ScanROutput(b []byte, outputOnly bool) ([]string, error) {
+	if !bytes.HasSuffix(b, []byte{'\n'}) {
+		b = append(b, '\n')
 	}
-	return output
+	var fns []writers.FilterFunc
+	if outputOnly {
+		fns = append(fns, writers.InputFilter)
+	}
+	fns = append(fns, writers.LineNumberStripper)
+	fns = append(fns, bytes.TrimSpace)
+
+	r, w := io.Pipe()
+
+	var lines []string
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+		wg.Done()
+	}()
+
+	filter := writers.NewFilter(w, fns...)
+
+	_, err := filter.Write(b)
+	if err != nil {
+		return nil, err
+	}
+
+	err = filter.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	wg.Wait()
+
+	return lines, nil
 }

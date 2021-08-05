@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/metrumresearchgroup/wrapt"
 )
 
 func TestRVersion(t *testing.T) {
-	assert := assert.New(t)
-
-	var installArgsTests = []struct {
+	var tests = []struct {
 		in             RVersion
 		expectedString string
 		expectedFull   string
@@ -26,11 +24,14 @@ func TestRVersion(t *testing.T) {
 			"2.1.4",
 		},
 	}
-	for i, tt := range installArgsTests {
-		actual := tt.in.ToString()
-		assert.Equal(tt.expectedString, actual, fmt.Sprintf("test num: %v", i+1))
-		actual = tt.in.ToFullString()
-		assert.Equal(tt.expectedFull, actual, fmt.Sprintf("test num: %v", i+1))
+	for i, test := range tests {
+		t.Run(test.expectedFull, func(tt *testing.T) {
+			t := wrapt.WrapT(tt)
 
+			actual := test.in.ToString()
+			t.A.Equal(test.expectedString, actual, fmt.Sprintf("test num: %v", i+1))
+			actual = test.in.ToFullString()
+			t.A.Equal(test.expectedFull, actual, fmt.Sprintf("test num: %v", i+1))
+		})
 	}
 }

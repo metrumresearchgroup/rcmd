@@ -2,27 +2,30 @@ package rcmd
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/metrumresearchgroup/rcmd/rp"
-	log "github.com/sirupsen/logrus"
 )
 
-// NewRSettings initializes RSettings
-func NewRSettings(rPath string) RSettings {
+// NewRSettings initializes RSettings.
+func NewRSettings(rPath string) (*RSettings, error) {
 	rs := RSettings{
-		EnvVars: NvpList{},
-		RPath:   rPath,
+		RPath: rPath,
 	}
-	// since we have the path in the constructor, we might as well get the R version now too
-	getRVersion(&rs)
-	return rs
+	// since we have the path in the constructor, we might as well get the
+	// R version now too
+
+	if _, err := rs.getRVersion(); err != nil {
+		return nil, err
+	}
+
+	return &rs, nil
 }
 
-// R provides a cleaned path to the R executable
+// R provides a cleaned path to the R executable.
 func (rs RSettings) R(os string, script bool) string {
 	r := "R"
 
@@ -43,6 +46,7 @@ func (rs RSettings) R(os string, script bool) string {
 	if os == "windows" && !strings.HasSuffix(r, ".exe") {
 		r = r + ".exe"
 	}
+
 	return r
 }
 
@@ -50,26 +54,47 @@ func (rs RSettings) R(os string, script bool) string {
 // unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
 // as if it is not defined, it will shell out to R to determine the version, and mutate itself
 // to set that value, while also returning the RVersion.
-// This will keep any program using rs from needing to shell out multiple times
-func getRVersion(rs *RSettings) RVersion {
-	if rs.Version.ToString() == "0.0" {
-		res, err := RunRWithOutput(context.Background(), *rs, "", []string{"--version", "--vanilla"})
-		if err != nil {
-			log.Fatal("error getting R version info")
-			return RVersion{}
-		}
-		rs.Version, rs.Platform = parseVersionData(res)
+// This will keep any program using rs from needing to shell out multiple times.
+func (rs *RSettings) getRVersion() (*RVersion, error) {
+	if rs.Version.ToString() != "0.0" {
+		version := rs.Version
+
+		return &version, nil
 	}
-	return rs.Version
+
+	co, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version", "--vanilla")
+	if err != nil {
+		return nil, err
+	}
+
+	var version *RVersion
+	var platform string
+
+	version, platform, err = parseVersionData(co)
+	if err != nil {
+		return nil, err
+	}
+	if version == nil {
+		return nil, errors.New("parseVersionData returned nil version")
+	}
+
+	rs.Version = *version
+	rs.Platform = platform
+
+	return version, nil
 }
 
-func parseVersionData(data []byte) (version RVersion, platform string) {
-	lines := rp.ScanLines(data)
+func parseVersionData(data []byte) (version *RVersion, platform string, err error) {
+	lines, err := rp.ScanLines(data)
+	if err != nil {
+		return nil, "", err
+	}
+
 	for _, line := range lines {
 		if strings.HasPrefix(line, "R version") {
 			spl := strings.Split(line, " ")
 			if len(spl) < 3 {
-				log.Fatal("error getting R version")
+				return nil, "", errors.New("error getting R version")
 			}
 			rsp := strings.Split(spl[2], ".")
 			if len(rsp) == 3 {
@@ -77,33 +102,35 @@ func parseVersionData(data []byte) (version RVersion, platform string) {
 				min, _ := strconv.Atoi(rsp[1])
 				pat, _ := strconv.Atoi(rsp[2])
 				// this should now make it so in the future it will be set so should only need to shell out to R once
-				version = RVersion{
+				version = &RVersion{
 					Major: maj,
 					Minor: min,
 					Patch: pat,
 				}
 			} else {
-				log.Fatal("error getting R version")
+				return nil, "", errors.New("error getting R version")
 			}
 		} else if strings.HasPrefix(line, "Platform:") {
 			rsp := strings.Split(line, " ")
 			if len(rsp) > 0 {
 				platform = strings.Trim(rsp[1], " ")
 			} else {
-				log.Fatal("error getting R platform")
+				return nil, "", errors.New("error getting R Platform")
 			}
 		}
 	}
-	return version, platform
+
+	return version, platform, nil
 }
 
-// LibPathsEnv returns the library formatted in the style to be set as an environment variable
-func (rs RSettings) LibPathsEnv() (bool, string) {
+// LibPathsEnv returns the library formatted in the style to be set as an environment variable.
+func (rs RSettings) LibPathsEnv() (string, bool) {
 	if len(rs.LibPaths) == 0 {
-		return false, ""
+		return "", false
 	}
 	if len(rs.LibPaths) == 1 && rs.LibPaths[0] == "" {
-		return false, ""
+		return "", false
 	}
-	return true, fmt.Sprintf("R_LIBS_SITE=%s", strings.Join(rs.LibPaths, ":"))
+
+	return strings.Join(rs.LibPaths, ":"), true
 }
