@@ -6,6 +6,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxv
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
 github.com/metrumresearchgroup/command v0.0.2 h1:JxpOvcbALMruIZTCFSxcE9aFSEA1hc/wXWuODz/9snk=
 github.com/metrumresearchgroup/command v0.0.2/go.mod h1:Rns9MjIA2oAzf8CipyELWFYAOZ+jknHc1Bsbs2OrBoU=
+github.com/metrumresearchgroup/command v0.0.3-0.20210805160010-557e9959d6b6 h1:vlmySon9ZqVzB0T6Zp5hRodlGxvC58odQnTyWFcd5zE=
+github.com/metrumresearchgroup/command v0.0.3-0.20210805160010-557e9959d6b6/go.mod h1:Rns9MjIA2oAzf8CipyELWFYAOZ+jknHc1Bsbs2OrBoU=
 github.com/metrumresearchgroup/environ v0.0.1 h1:sYu58eHZ/KdFFkl/SrYFT36cw6IRDdVHWxzF+/94HcY=
 github.com/metrumresearchgroup/environ v0.0.1/go.mod h1:Zx7pp9lB9kQ/WmS++Y3k2nUfcUAhIeqYKGFtir7VXlI=
 github.com/metrumresearchgroup/wrapt v0.0.1 h1:BLRmI6quxbN3BrkSkMSfNGIt1rC4sGa/Cc8pa7oVRlE=
