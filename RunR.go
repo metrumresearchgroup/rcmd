@@ -57,22 +57,16 @@ func WithPrefix(prefix string) RunOption {
 
 // StartR launches an interactive R console given the same
 // configuration as a specific package.
-func (rs *RSettings) StartR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*command.Pipes, func() error, error) {
+func (rs *RSettings) StartR(ctx context.Context, rc *RunCfg, dir string, cmdArgs ...string) (*command.Interact, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
-	p, err := capture.Start(ctx, rpath, cmdArgs...)
-	if err != nil {
-		return nil, nil, err
-	}
 
-	return p, func() error {
-		return capture.Stop()
-	}, nil
+	return capture.Start(ctx, rpath, cmdArgs...)
 }
 
 // RunR runs a non-interactive R command and streams back the results of
