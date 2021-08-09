@@ -10,6 +10,8 @@ github.com/metrumresearchgroup/command v0.0.3-0.20210805160010-557e9959d6b6 h1:v
 github.com/metrumresearchgroup/command v0.0.3-0.20210805160010-557e9959d6b6/go.mod h1:Rns9MjIA2oAzf8CipyELWFYAOZ+jknHc1Bsbs2OrBoU=
 github.com/metrumresearchgroup/command v0.0.3-0.20210806163932-8942daff567a h1:KCGp91B1zrsl8PA/fA6NEEr4se2Wz+M9kJoPhmpEbDE=
 github.com/metrumresearchgroup/command v0.0.3-0.20210806163932-8942daff567a/go.mod h1:Rns9MjIA2oAzf8CipyELWFYAOZ+jknHc1Bsbs2OrBoU=
+github.com/metrumresearchgroup/command v0.0.3-0.20210809123916-108531fdba55 h1:O52iUiZPmSAw3R0qvNngCwlOFuc/fV3L0Tbk3JIpQPU=
+github.com/metrumresearchgroup/command v0.0.3-0.20210809123916-108531fdba55/go.mod h1:Rns9MjIA2oAzf8CipyELWFYAOZ+jknHc1Bsbs2OrBoU=
 github.com/metrumresearchgroup/environ v0.0.1 h1:sYu58eHZ/KdFFkl/SrYFT36cw6IRDdVHWxzF+/94HcY=
 github.com/metrumresearchgroup/environ v0.0.1/go.mod h1:Zx7pp9lB9kQ/WmS++Y3k2nUfcUAhIeqYKGFtir7VXlI=
 github.com/metrumresearchgroup/wrapt v0.0.1 h1:BLRmI6quxbN3BrkSkMSfNGIt1rC4sGa/Cc8pa7oVRlE=
