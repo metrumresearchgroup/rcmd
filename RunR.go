@@ -3,6 +3,7 @@ package rcmd
 import (
 	"context"
 	"os"
+	"os/exec"
 	"runtime"
 
 	"github.com/metrumresearchgroup/command"
@@ -13,6 +14,7 @@ type RunCfg struct {
 	Prefix           string
 	StripLineNumbers bool
 	Script           bool
+	CmdModifierFunc  func(*exec.Cmd) error
 }
 
 // RunOption are specific run option funcs to change configuration.
@@ -62,7 +64,7 @@ func (rs *RSettings) StartR(ctx context.Context, rc *RunCfg, dir string, cmdArgs
 	if err != nil {
 		return nil, err
 	}
-	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
+	capture := command.New(command.WithDir(dir), command.WithEnv(envVars), command.WithCmdModifier(rc.CmdModifierFunc))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
 
@@ -77,7 +79,7 @@ func (rs *RSettings) RunR(ctx context.Context, rc *RunCfg, dir string, cmdArgs .
 	if err != nil {
 		return nil, 0, err
 	}
-	capture := command.New(command.WithDir(dir), command.WithEnv(envVars))
+	capture := command.New(command.WithDir(dir), command.WithEnv(envVars),  command.WithCmdModifier(rc.CmdModifierFunc))
 
 	rpath := rs.R(runtime.GOOS, rc.Script)
 	p, err := capture.Run(ctx, rpath, cmdArgs...)
@@ -96,11 +98,11 @@ func (rs *RSettings) RunRWithOutput(ctx context.Context, rc *RunCfg, dir string,
 	}
 	name := rs.R(runtime.GOOS, rc.Script)
 
-	return combinedOutput(ctx, envVars, dir, name, args...)
+	return combinedOutput(ctx, envVars, dir, name, rc, args...)
 }
 
-func combinedOutput(ctx context.Context, env []string, dir string, name string, args ...string) ([]byte, error) {
-	capture := command.New(command.WithEnv(env), command.WithDir(dir))
+func combinedOutput(ctx context.Context, env []string, dir string, name string, rc *RunCfg, args ...string) ([]byte, error) {
+	capture := command.New(command.WithEnv(env), command.WithDir(dir), command.WithCmdModifier(rc.CmdModifierFunc))
 	co, err := capture.CombinedOutput(ctx, name, args...)
 
 	return co, err
@@ -110,18 +112,18 @@ type RCapture struct {
 	*command.Capture
 }
 
-func (rs *RSettings) Run(ctx context.Context, _ *RunCfg, dir string, args ...string) (*command.Pipes, *command.Capture, error) {
+func (rs *RSettings) Run(ctx context.Context, rc *RunCfg, dir string, args ...string) (*command.Pipes, *command.Capture, error) {
 	envVars, err := configureEnv(os.Environ(), rs)
 	if err != nil {
 		return nil, nil, err
 	}
 	name := rs.R(runtime.GOOS, false)
 
-	return run(ctx, envVars, dir, name, args...)
+	return run(ctx, envVars, dir, name, rc, args...)
 }
 
-func run(ctx context.Context, env []string, dir string, name string, args ...string) (*command.Pipes, *command.Capture, error) {
-	cmd := command.New(command.WithEnv(env), command.WithDir(dir))
+func run(ctx context.Context, env []string, dir string, name string, rc *RunCfg, args ...string) (*command.Pipes, *command.Capture, error) {
+	cmd := command.New(command.WithEnv(env), command.WithDir(dir),  command.WithCmdModifier(rc.CmdModifierFunc))
 	ps, err := cmd.Run(ctx, name, args...)
 
 	return ps, cmd, err
