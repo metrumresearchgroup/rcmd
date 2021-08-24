@@ -3,12 +3,10 @@ package rcmd
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/metrumresearchgroup/wrapt"
 	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRunRBatch(t *testing.T) {
@@ -56,24 +54,11 @@ https://www.gnu.org/licenses/.
 		t.Run(test.name, func(tt *testing.T) {
 			t := wrapt.WrapT(t)
 
-			co, err := test.args.rs.RunRWithOutput(context.Background(), NewRunConfig(), "", test.args.cmdArgs...)
-			assert.Equal(t, nil, err, "error")
+			cmd, err := New(context.Background(), "", test.args.cmdArgs...)
+			co, err := cmd.CombinedOutput()
 
-			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(co), string(test.want))
-			assert.True(t, bytes.HasPrefix(co, []byte("R version")), msg)
+			t.R.NoError(err)
+			t.R.True(bytes.HasPrefix(co, []byte("R version")), "missing prefix 'R version'")
 		})
-	}
-}
-
-func BenchmarkRunR(b *testing.B) {
-	rs, err := NewRSettings("R")
-	if err != nil {
-		b.Fatalf("non-nil err: %v", err)
-	}
-	for n := 0; n < b.N; n++ {
-		_, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version")
-		if err != nil {
-			b.Fatalf("caught error: %v", err)
-		}
 	}
 }

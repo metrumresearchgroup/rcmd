@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/metrumresearchgroup/command"
+
 	"github.com/metrumresearchgroup/rcmd/rp"
 )
 
@@ -18,9 +20,12 @@ func NewRSettings(rPath string) (*RSettings, error) {
 	// since we have the path in the constructor, we might as well get the
 	// R version now too
 
-	if _, err := rs.getRVersion(); err != nil {
+	rv, err := getRVersion(rPath)
+	if err != nil {
 		return nil, err
 	}
+
+	rs.Version = *rv
 
 	return &rs, nil
 }
@@ -50,6 +55,43 @@ func (rs RSettings) R(os string, script bool) string {
 	return r
 }
 
+var rversion RVersion
+var rplatform string
+
+func getRVersion(rPath string) (*RVersion, error) {
+	if rversion.ToString() != "0.0" {
+		version := rversion
+
+		return &version, nil
+	}
+
+	if rPath == "" {
+		rPath = "R"
+	}
+
+	cmd := command.NewWithContext(context.Background(), rPath, "--quiet", "--version", "--vanilla")
+	co, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	var version *RVersion
+	var platform string
+
+	version, platform, err = parseVersionData(co)
+	if err != nil {
+		return nil, err
+	}
+	if version == nil {
+		return nil, errors.New("parseVersionData returned nil version")
+	}
+
+	rversion = *version
+	rplatform = platform
+
+	return version, nil
+}
+
 // getRVersion returns the R version, and sets R Version and R platform in RSettings
 // unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
 // as if it is not defined, it will shell out to R to determine the version, and mutate itself
@@ -62,7 +104,8 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 		return &version, nil
 	}
 
-	co, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version", "--vanilla")
+	cmd := command.NewWithContext(context.Background(), "R", "--quiet", "--version", "--vanilla")
+	co, err := cmd.CombinedOutput()
 	if err != nil {
 		return nil, err
 	}

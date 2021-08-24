@@ -1,5 +1,3 @@
-// +build R
-
 package rcmd
 
 import (
@@ -13,18 +11,12 @@ func TestRVersionExecution(tt *testing.T) {
 
 	rs, err := NewRSettings("")
 	t.A.NoError(err)
+	t.A.NotEmpty(rs.Version)
 
 	// this test expects a machine with R 3.5.2 available on the default System Path
-	expected := RVersion{3, 5, 2}
-	t.A.Empty(rs.Version, "uncollected value")
+	t.R.Equal(RVersion{4, 1, 0}, rs.Version)
 
-	actual, err := rs.getRVersion()
+	actual, err := getRVersion("")
 	t.A.NoError(err)
-
-	t.RunFatal("R version", func(t *wrapt.T) {
-		t.A.Equal(expected, actual)
-	})
-	t.RunFatal("rs.Version", func(t *wrapt.T) {
-		t.A.Equal(expected, rs.Version)
-	})
+	t.R.Equal(&RVersion{4, 1, 0}, actual)
 }

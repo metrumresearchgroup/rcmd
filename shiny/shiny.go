@@ -4,20 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/metrumresearchgroup/command"
-
 	"github.com/metrumresearchgroup/rcmd"
 )
 
-func LaunchApp(dir, name string, port int) (*command.Interact, error) {
+func ConfigureApp(ctx context.Context, dir, name string, port int) (*rcmd.RCmd, error) {
 	if port == 0 {
 		port = 9999
 	}
-	rc := rcmd.NewRunConfig(rcmd.WithPrefix("foo"))
-	rs, err := rcmd.NewRSettings("R")
+
+	rc, err := rcmd.New(ctx, dir, "-e", fmt.Sprintf("shiny::runApp('%s', port = %d)", name, port), "--slave", "--quiet")
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return rs.StartR(context.Background(), rc, dir, "-e", fmt.Sprintf("shiny::runApp('%s', port = %d)", name, port), "--slave", "--quiet")
+	return rc, nil
 }
