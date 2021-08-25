@@ -3,7 +3,7 @@ module github.com/metrumresearchgroup/rcmd
 go 1.14
 
 require (
-	github.com/metrumresearchgroup/command v0.0.3
+	github.com/metrumresearchgroup/command v0.0.4-0.20210823195243-2aa22b16a7f4
 	github.com/metrumresearchgroup/environ v0.0.1
 	github.com/metrumresearchgroup/wrapt v0.0.2
 	github.com/sirupsen/logrus v1.6.0

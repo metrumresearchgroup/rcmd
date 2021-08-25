@@ -46,7 +46,7 @@ func Test_startR_example2(tt *testing.T) {
 
 	i, err := rs.StartR(context.Background(), New(), "", "-e", "2+2", "slave")
 	t.A.NoError(err)
-	defer fmt.Println(i.Stop())
+	defer fmt.Println(i.Wait())
 }
 
 func Test_runR_expression(tt *testing.T) {
@@ -115,7 +115,7 @@ func Test_runR_exampleCancel(tt *testing.T) {
 
 		i, err := rs.StartR(ctx, New(), "", "-e", "2+2", "--slave", "--interactive")
 		t.A.NoError(err)
-		defer fmt.Println(i.Stop())
+		defer fmt.Println(i.Wait())
 		res, err := io.ReadAll(i.Pipes().Stdout)
 		t.A.NoError(err)
 		fmt.Println("go routine 1: ", res)
@@ -128,7 +128,7 @@ func Test_runR_exampleCancel(tt *testing.T) {
 
 		i, err := rs.StartR(ctx, New(), "", "-e", "Sys.sleep(0.5); stop('failed')", "--slave", "--interactive")
 		t.A.NoError(err)
-		defer fmt.Println(i.Stop())
+		defer fmt.Println(i.Wait())
 		if err != nil {
 			log.Error("goroutine 2 error:", err)
 			log.Warn("cancelling ongoing work...")
@@ -144,7 +144,7 @@ func Test_runR_exampleCancel(tt *testing.T) {
 		t.A.NoError(err)
 		i, err := rs.StartR(ctx, New(), "", "-e", "Sys.sleep(1); 2+2", "--slave", "--interactive")
 		t.A.NoError(err)
-		defer fmt.Println(i.Stop())
+		defer fmt.Println(i.Wait())
 		if err != nil {
 			log.Error("goroutine 3 error:", err)
 		}
