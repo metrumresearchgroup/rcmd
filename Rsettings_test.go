@@ -121,7 +121,7 @@ http://www.gnu.org/licenses/.
 	}
 }
 
-func TestRMethod(t *testing.T) {
+func TestRMethod(tt *testing.T) {
 	var tests = []struct {
 		name     string
 		rpath    string
@@ -178,8 +178,8 @@ func TestRMethod(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		if test.platform == runtime.GOOS {
-			t.Run(test.name, func(tt *testing.T) {
+		tt.Run(test.name, func(tt *testing.T) {
+			if test.platform == runtime.GOOS {
 				t := wrapt.WrapT(tt)
 
 				rs, err := NewRSettings(test.rpath)
@@ -188,7 +188,7 @@ func TestRMethod(t *testing.T) {
 				r := rs.R(test.platform, false)
 
 				t.A.Equal(test.expected, r)
-			})
-		}
+			}
+		})
 	}
 }

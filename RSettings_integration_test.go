@@ -16,7 +16,7 @@ func TestRVersionExecution(tt *testing.T) {
 	// this test expects a machine with R 3.5.2 available on the default System Path
 	t.R.Equal(RVersion{4, 1, 0}, rs.Version)
 
-	actual, err := getRVersion("")
+	actual, _, _, err := getRVersionPlatformPath("")
 	t.A.NoError(err)
 	t.R.Equal(&RVersion{4, 1, 0}, actual)
 }

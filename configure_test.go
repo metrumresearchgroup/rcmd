@@ -1,6 +1,5 @@
 package rcmd
 
-//
 import (
 	"io/ioutil"
 	"runtime"

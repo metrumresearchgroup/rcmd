@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func TestRunRBatch(t *testing.T) {
+func TestRunRBatch(tt *testing.T) {
 	type args struct {
 		fs      afero.Fs
 		rs      RSettings
@@ -51,10 +51,11 @@ https://www.gnu.org/licenses/.
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(tt *testing.T) {
-			t := wrapt.WrapT(t)
+		tt.Run(test.name, func(tt *testing.T) {
+			t := wrapt.WrapT(tt)
 
 			cmd, err := New(context.Background(), "", test.args.cmdArgs...)
+			t.R.NoError(err)
 			co, err := cmd.CombinedOutput()
 
 			t.R.NoError(err)

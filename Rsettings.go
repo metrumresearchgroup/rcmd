@@ -20,12 +20,14 @@ func NewRSettings(rPath string) (*RSettings, error) {
 	// since we have the path in the constructor, we might as well get the
 	// R version now too
 
-	rv, err := getRVersion(rPath)
+	rv, rpl, rpa, err := getRVersionPlatformPath(rPath)
 	if err != nil {
 		return nil, err
 	}
 
 	rs.Version = *rv
+	rs.Platform = rpl
+	rs.RPath = rpa
 
 	return &rs, nil
 }
@@ -55,16 +57,12 @@ func (rs RSettings) R(os string, script bool) string {
 	return r
 }
 
-var rversion RVersion
-var rplatform string
-
-func getRVersion(rPath string) (*RVersion, error) {
-	if rversion.ToString() != "0.0" {
-		version := rversion
-
-		return &version, nil
-	}
-
+// getRVersionPlatform returns the R version, and sets R Version and R platform in global state.
+// unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
+// as if it is not defined, it will shell out to R to determine the version, and mutate itself
+// to set that value, while also returning the RVersion.
+// This will keep any program using rs from needing to shell out multiple times.
+func getRVersionPlatformPath(rPath string) (*RVersion, string, string, error) {
 	if rPath == "" {
 		rPath = "R"
 	}
@@ -72,7 +70,7 @@ func getRVersion(rPath string) (*RVersion, error) {
 	cmd := command.NewWithContext(context.Background(), rPath, "--quiet", "--version", "--vanilla")
 	co, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	var version *RVersion
@@ -80,51 +78,13 @@ func getRVersion(rPath string) (*RVersion, error) {
 
 	version, platform, err = parseVersionData(co)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	if version == nil {
-		return nil, errors.New("parseVersionData returned nil version")
+		return nil, "", "", errors.New("parseVersionData returned nil version")
 	}
 
-	rversion = *version
-	rplatform = platform
-
-	return version, nil
-}
-
-// getRVersion returns the R version, and sets R Version and R platform in RSettings
-// unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
-// as if it is not defined, it will shell out to R to determine the version, and mutate itself
-// to set that value, while also returning the RVersion.
-// This will keep any program using rs from needing to shell out multiple times.
-func (rs *RSettings) getRVersion() (*RVersion, error) {
-	if rs.Version.ToString() != "0.0" {
-		version := rs.Version
-
-		return &version, nil
-	}
-
-	cmd := command.NewWithContext(context.Background(), "R", "--quiet", "--version", "--vanilla")
-	co, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
-
-	var version *RVersion
-	var platform string
-
-	version, platform, err = parseVersionData(co)
-	if err != nil {
-		return nil, err
-	}
-	if version == nil {
-		return nil, errors.New("parseVersionData returned nil version")
-	}
-
-	rs.Version = *version
-	rs.Platform = platform
-
-	return version, nil
+	return version, platform, rPath, nil
 }
 
 func parseVersionData(data []byte) (version *RVersion, platform string, err error) {

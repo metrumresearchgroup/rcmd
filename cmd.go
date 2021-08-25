@@ -8,8 +8,6 @@ import (
 	"github.com/metrumresearchgroup/command"
 )
 
-type Cmd2 command.Cmd
-
 type RCmd struct {
 	*command.Cmd
 
@@ -29,6 +27,10 @@ func newRCmd(ctx context.Context, script bool, dir string, args ...string) (*RCm
 	}
 
 	rs, err := NewRSettings("")
+	if err != nil {
+		return nil, err
+	}
+
 	env, err := configureEnv(os.Environ(), rs)
 	if err != nil {
 		return nil, err
@@ -43,7 +45,6 @@ func newRCmd(ctx context.Context, script bool, dir string, args ...string) (*RCm
 	rcmd.Cmd = cmd
 
 	return rcmd, nil
-
 }
 
 func New(ctx context.Context, dir string, args ...string) (*RCmd, error) {
