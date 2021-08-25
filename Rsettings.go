@@ -20,7 +20,7 @@ func NewRSettings(rPath string) (*RSettings, error) {
 	// since we have the path in the constructor, we might as well get the
 	// R version now too
 
-	rv, rpl, rpa, err := getRVersionPlatformPath(rPath)
+	rv, rpl, rpa, err := GetRVersionPlatformPath(rPath)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (rs RSettings) R(os string, script bool) string {
 // as if it is not defined, it will shell out to R to determine the version, and mutate itself
 // to set that value, while also returning the RVersion.
 // This will keep any program using rs from needing to shell out multiple times.
-func getRVersionPlatformPath(rPath string) (*RVersion, string, string, error) {
+func GetRVersionPlatformPath(rPath string) (*RVersion, string, string, error) {
 	if rPath == "" {
 		rPath = "R"
 	}

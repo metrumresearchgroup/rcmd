@@ -31,7 +31,7 @@ func newRCmd(ctx context.Context, script bool, dir string, args ...string) (*RCm
 		return nil, err
 	}
 
-	env, err := configureEnv(os.Environ(), rs)
+	env, err := ConfigureEnv(os.Environ(), rs)
 	if err != nil {
 		return nil, err
 	}

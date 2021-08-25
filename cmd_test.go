@@ -1,4 +1,4 @@
-package rcmd
+package rcmd_test
 
 import (
 	"bytes"
@@ -7,12 +7,14 @@ import (
 
 	"github.com/metrumresearchgroup/wrapt"
 	"github.com/spf13/afero"
+
+	"github.com/metrumresearchgroup/rcmd"
 )
 
 func TestRunRBatch(tt *testing.T) {
 	type args struct {
 		fs      afero.Fs
-		rs      RSettings
+		rs      rcmd.RSettings
 		cmdArgs []string
 	}
 	tests := []struct {
@@ -25,8 +27,8 @@ func TestRunRBatch(tt *testing.T) {
 			name: "Test R Version",
 			args: args{
 				fs: afero.NewOsFs(),
-				rs: func() RSettings {
-					rs, _ := NewRSettings("")
+				rs: func() rcmd.RSettings {
+					rs, _ := rcmd.NewRSettings("")
 
 					return *rs
 				}(),
@@ -54,7 +56,7 @@ https://www.gnu.org/licenses/.
 		tt.Run(test.name, func(tt *testing.T) {
 			t := wrapt.WrapT(tt)
 
-			cmd, err := New(context.Background(), "", test.args.cmdArgs...)
+			cmd, err := rcmd.New(context.Background(), "", test.args.cmdArgs...)
 			t.R.NoError(err)
 			co, err := cmd.CombinedOutput()
 

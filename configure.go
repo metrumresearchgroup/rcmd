@@ -10,9 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// sysEnvVars contains the default environment variables usually from
+// ConfigureEnv contains the default environment variables usually from
 // os.Environ().
-func configureEnv(env []string, rs *RSettings) ([]string, error) {
+func ConfigureEnv(env []string, rs *RSettings) ([]string, error) {
 	if rs.AsUser {
 		return configureEnvAsUser(env, rs)
 	} else {

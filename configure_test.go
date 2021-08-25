@@ -1,4 +1,4 @@
-package rcmd
+package rcmd_test
 
 import (
 	"io/ioutil"
@@ -9,6 +9,8 @@ import (
 	"github.com/metrumresearchgroup/environ"
 	"github.com/metrumresearchgroup/wrapt"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/metrumresearchgroup/rcmd"
 )
 
 type configureArgsTestCase struct {
@@ -19,7 +21,7 @@ type configureArgsTestCase struct {
 }
 
 func TestConfigureArgs1(t *testing.T) {
-	defaultRS, err := NewRSettings("")
+	defaultRS, err := rcmd.NewRSettings("")
 	assert.NoError(t, err)
 
 	// there should always be at least one libpath
@@ -85,7 +87,7 @@ func TestConfigureArgs1(t *testing.T) {
 		t.Run(test.context, func(tt *testing.T) {
 			t := wrapt.WrapT(tt)
 
-			actual, err := configureEnv(test.input, defaultRS)
+			actual, err := rcmd.ConfigureEnv(test.input, defaultRS)
 			t.A.NoError(err)
 
 			// Make sure that all environment variables are present
@@ -100,7 +102,7 @@ func TestConfigureArgs1(t *testing.T) {
 func Test_configureEnv(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	rs, err := NewRSettings("R")
+	rs, err := rcmd.NewRSettings("R")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -110,9 +112,9 @@ func Test_configureEnv(tt *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	want, err := configureEnv(cleanEnv.AsSlice(), rs)
+	want, err := rcmd.ConfigureEnv(cleanEnv.AsSlice(), rs)
 	t.A.NoError(err)
-	got, err := configureEnv(cleanEnv.AsSlice(), rs)
+	got, err := rcmd.ConfigureEnv(cleanEnv.AsSlice(), rs)
 	t.A.NoError(err)
 
 	wantenv := environ.New(want)

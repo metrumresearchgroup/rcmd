@@ -1,18 +1,20 @@
 // +build !windows
 
-package rcmd
+package rcmd_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/metrumresearchgroup/wrapt"
+
+	"github.com/metrumresearchgroup/rcmd"
 )
 
 func Test_example(tt *testing.T) {
 	t := wrapt.WrapT(tt)
 
-	cmd, err := New(context.Background(), "", "--quiet", "-e", "2+2")
+	cmd, err := rcmd.New(context.Background(), "", "--quiet", "-e", "2+2")
 	t.R.NoError(err)
 
 	co, err := cmd.CombinedOutput()
