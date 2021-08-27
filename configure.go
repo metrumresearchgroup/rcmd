@@ -10,20 +10,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// sysEnvVars contains the default environment variables usually from
+// ConfigureEnv contains the default environment variables usually from
 // os.Environ().
-func configureEnv(sysEnvVars []string, rs *RSettings) ([]string, error) {
+func ConfigureEnv(env []string, rs *RSettings) ([]string, error) {
 	if rs.AsUser {
-		return configureEnvAsUser(sysEnvVars, rs)
+		return configureEnvAsUser(env, rs)
 	} else {
-		return configureEnvAsNotUser(sysEnvVars, rs)
+		return configureEnvAsNotUser(env, rs)
 	}
 }
 
 // sysEnvVars contains the default environment variables usually from
 // os.Environ().
-func configureEnvAsNotUser(sysEnvVars []string, rs *RSettings) ([]string, error) {
-	evs := environ.New(sysEnvVars)
+func configureEnvAsNotUser(env []string, rs *RSettings) ([]string, error) {
+	evs := environ.New(env)
 	_, err := evs.Drop("R_LIBS_USER", "R_LIBS_SITE")
 	if err != nil {
 		return nil, err

@@ -1,25 +1,27 @@
-package rcmd
+package rcmd_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/metrumresearchgroup/wrapt"
+
+	"github.com/metrumresearchgroup/rcmd"
 )
 
 func TestRVersion(t *testing.T) {
 	var tests = []struct {
-		in             RVersion
+		in             rcmd.RVersion
 		expectedString string
 		expectedFull   string
 	}{
 		{
-			RVersion{3, 5, 2},
+			rcmd.RVersion{3, 5, 2},
 			"3.5",
 			"3.5.2",
 		},
 		{
-			RVersion{2, 1, 4},
+			rcmd.RVersion{2, 1, 4},
 			"2.1",
 			"2.1.4",
 		},

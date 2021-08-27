@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/metrumresearchgroup/command"
+
 	"github.com/metrumresearchgroup/rcmd/rp"
 )
 
@@ -18,9 +20,14 @@ func NewRSettings(rPath string) (*RSettings, error) {
 	// since we have the path in the constructor, we might as well get the
 	// R version now too
 
-	if _, err := rs.getRVersion(); err != nil {
+	rv, rpl, rpa, err := GetRVersionPlatformPath(rPath)
+	if err != nil {
 		return nil, err
 	}
+
+	rs.Version = *rv
+	rs.Platform = rpl
+	rs.RPath = rpa
 
 	return &rs, nil
 }
@@ -50,21 +57,20 @@ func (rs RSettings) R(os string, script bool) string {
 	return r
 }
 
-// getRVersion returns the R version, and sets R Version and R platform in RSettings
+// getRVersionPlatform returns the R version, and sets R Version and R platform in global state.
 // unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
 // as if it is not defined, it will shell out to R to determine the version, and mutate itself
 // to set that value, while also returning the RVersion.
 // This will keep any program using rs from needing to shell out multiple times.
-func (rs *RSettings) getRVersion() (*RVersion, error) {
-	if rs.Version.ToString() != "0.0" {
-		version := rs.Version
-
-		return &version, nil
+func GetRVersionPlatformPath(rPath string) (*RVersion, string, string, error) {
+	if rPath == "" {
+		rPath = "R"
 	}
 
-	co, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version", "--vanilla")
+	cmd := command.NewWithContext(context.Background(), rPath, "--quiet", "--version", "--vanilla")
+	co, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	var version *RVersion
@@ -72,16 +78,13 @@ func (rs *RSettings) getRVersion() (*RVersion, error) {
 
 	version, platform, err = parseVersionData(co)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 	if version == nil {
-		return nil, errors.New("parseVersionData returned nil version")
+		return nil, "", "", errors.New("parseVersionData returned nil version")
 	}
 
-	rs.Version = *version
-	rs.Platform = platform
-
-	return version, nil
+	return version, platform, rPath, nil
 }
 
 func parseVersionData(data []byte) (version *RVersion, platform string, err error) {

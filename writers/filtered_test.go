@@ -68,7 +68,7 @@ func Test_Filters(tt *testing.T) {
 
 			sut := writers.NewFilter(w, test.args.filters...)
 			n, err := sut.Write([]byte(test.msg))
-			t.ValidateError("no error", test.wantErr, err)
+			t.R.WantError(test.wantErr, err)
 			if !test.wantErr {
 				t.A.NotZero(n)
 			}
@@ -83,6 +83,6 @@ type nopcloser struct {
 }
 
 func (nc *nopcloser) Close() error {
-	//nop
+	// nop
 	return nil
 }

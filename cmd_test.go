@@ -1,20 +1,20 @@
-package rcmd
+package rcmd_test
 
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/metrumresearchgroup/wrapt"
 	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
+
+	"github.com/metrumresearchgroup/rcmd"
 )
 
-func TestRunRBatch(t *testing.T) {
+func TestRunRBatch(tt *testing.T) {
 	type args struct {
 		fs      afero.Fs
-		rs      RSettings
+		rs      rcmd.RSettings
 		cmdArgs []string
 	}
 	tests := []struct {
@@ -27,8 +27,8 @@ func TestRunRBatch(t *testing.T) {
 			name: "Test R Version",
 			args: args{
 				fs: afero.NewOsFs(),
-				rs: func() RSettings {
-					rs, _ := NewRSettings("")
+				rs: func() rcmd.RSettings {
+					rs, _ := rcmd.NewRSettings("")
 
 					return *rs
 				}(),
@@ -53,27 +53,15 @@ https://www.gnu.org/licenses/.
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(tt *testing.T) {
-			t := wrapt.WrapT(t)
+		tt.Run(test.name, func(tt *testing.T) {
+			t := wrapt.WrapT(tt)
 
-			co, err := test.args.rs.RunRWithOutput(context.Background(), NewRunConfig(), "", test.args.cmdArgs...)
-			assert.Equal(t, nil, err, "error")
+			cmd, err := rcmd.New(context.Background(), "", test.args.cmdArgs...)
+			t.R.NoError(err)
+			co, err := cmd.CombinedOutput()
 
-			msg := fmt.Sprintf("\ngot<\n%v\n>\nwant<\n%v\n>", string(co), string(test.want))
-			assert.True(t, bytes.HasPrefix(co, []byte("R version")), msg)
+			t.R.NoError(err)
+			t.R.True(bytes.HasPrefix(co, []byte("R version")), "missing prefix 'R version'")
 		})
-	}
-}
-
-func BenchmarkRunR(b *testing.B) {
-	rs, err := NewRSettings("R")
-	if err != nil {
-		b.Fatalf("non-nil err: %v", err)
-	}
-	for n := 0; n < b.N; n++ {
-		_, err := rs.RunRWithOutput(context.Background(), NewRunConfig(), "", "--version")
-		if err != nil {
-			b.Fatalf("caught error: %v", err)
-		}
 	}
 }
