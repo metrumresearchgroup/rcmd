@@ -8,7 +8,7 @@ import (
 	"github.com/metrumresearchgroup/wrapt"
 	"github.com/spf13/afero"
 
-	"github.com/metrumresearchgroup/rcmd"
+	"github.com/metrumresearchgroup/rcmd/v2"
 )
 
 func TestRunRBatch(tt *testing.T) {

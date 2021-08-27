@@ -8,7 +8,7 @@ import (
 
 	"github.com/metrumresearchgroup/wrapt"
 
-	"github.com/metrumresearchgroup/rcmd"
+	"github.com/metrumresearchgroup/rcmd/v2"
 )
 
 func Test_example(tt *testing.T) {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/metrumresearchgroup/command"
 
-	"github.com/metrumresearchgroup/rcmd/rp"
+	"github.com/metrumresearchgroup/rcmd/v2/rp"
 )
 
 // NewRSettings initializes RSettings.

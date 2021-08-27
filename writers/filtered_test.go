@@ -6,7 +6,7 @@ import (
 
 	. "github.com/metrumresearchgroup/wrapt"
 
-	"github.com/metrumresearchgroup/rcmd/writers"
+	"github.com/metrumresearchgroup/rcmd/v2/writers"
 )
 
 func Test_Filters(tt *testing.T) {

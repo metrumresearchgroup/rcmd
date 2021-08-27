@@ -1,4 +1,4 @@
-module github.com/metrumresearchgroup/rcmd
+module github.com/metrumresearchgroup/rcmd/v2
 
 go 1.14
 

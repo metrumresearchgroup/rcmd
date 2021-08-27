@@ -6,7 +6,7 @@ import (
 
 	"github.com/metrumresearchgroup/wrapt"
 
-	"github.com/metrumresearchgroup/rcmd"
+	"github.com/metrumresearchgroup/rcmd/v2"
 )
 
 func TestRVersion(t *testing.T) {

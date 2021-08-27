@@ -7,7 +7,7 @@ import (
 
 	"github.com/metrumresearchgroup/command"
 
-	"github.com/metrumresearchgroup/rcmd/shiny"
+	"github.com/metrumresearchgroup/rcmd/v2/shiny"
 )
 
 const timeout = 20 * time.Second

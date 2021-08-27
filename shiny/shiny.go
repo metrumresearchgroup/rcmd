@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/metrumresearchgroup/rcmd"
+	"github.com/metrumresearchgroup/rcmd/v2"
 )
 
 func ConfigureApp(ctx context.Context, dir, name string, port int) (*rcmd.RCmd, error) {

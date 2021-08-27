@@ -6,7 +6,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/metrumresearchgroup/rcmd/writers"
+	"github.com/metrumresearchgroup/rcmd/v2/writers"
 )
 
 // ScanLines scans lines from Rscript output and returns an array with
