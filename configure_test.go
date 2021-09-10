@@ -10,7 +10,7 @@ import (
 	"github.com/metrumresearchgroup/wrapt"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/metrumresearchgroup/rcmd/v2"
+	rcmd "github.com/metrumresearchgroup/rcmd/v2"
 )
 
 type configureArgsTestCase struct {
