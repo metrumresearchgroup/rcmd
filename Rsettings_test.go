@@ -51,7 +51,7 @@ func TestParseVersionData(t *testing.T) {
 	var tests = []struct {
 		data     []byte
 		version  *RVersion
-		platform string
+		platform Platform
 		message  string
 	}{
 		{

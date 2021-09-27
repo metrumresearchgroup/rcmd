@@ -1,13 +1,17 @@
 package rcmd
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/metrumresearchgroup/command"
+	"github.com/spf13/afero"
 
 	"github.com/metrumresearchgroup/rcmd/v2/rp"
 )
@@ -26,8 +30,8 @@ func NewRSettings(rPath string) (*RSettings, error) {
 	}
 
 	rs.Version = *rv
-	rs.Platform = rpl
-	rs.RPath = rpa
+	rs.Platform = string(rpl)
+	rs.RPath = string(rpa)
 
 	return &rs, nil
 }
@@ -57,12 +61,18 @@ func (rs RSettings) R(os string, script bool) string {
 	return r
 }
 
-// getRVersionPlatform returns the R version, and sets R Version and R platform in global state.
+type RPath string
+
+func (rp RPath) Exists(fs afero.Fs) (bool, error) {
+	return afero.Exists(fs, string(rp))
+}
+
+// GetRVersionPlatformPath returns the R version, and sets R Version and R platform in global state.
 // unlike the other methods, this one is a pointer, as RVersion mutates the known R Version,
 // as if it is not defined, it will shell out to R to determine the version, and mutate itself
 // to set that value, while also returning the RVersion.
 // This will keep any program using rs from needing to shell out multiple times.
-func GetRVersionPlatformPath(rPath string) (*RVersion, string, string, error) {
+func GetRVersionPlatformPath(rPath string) (*RVersion, Platform, RPath, error) {
 	if rPath == "" {
 		rPath = "R"
 	}
@@ -74,56 +84,52 @@ func GetRVersionPlatformPath(rPath string) (*RVersion, string, string, error) {
 	}
 
 	var version *RVersion
-	var platform string
+	var platform Platform
 
 	version, platform, err = parseVersionData(co)
 	if err != nil {
 		return nil, "", "", err
 	}
-	if version == nil {
-		return nil, "", "", errors.New("parseVersionData returned nil version")
-	}
 
-	return version, platform, rPath, nil
+	return version, platform, RPath(rPath), nil
 }
 
-func parseVersionData(data []byte) (version *RVersion, platform string, err error) {
-	lines, err := rp.ScanLines(data)
-	if err != nil {
-		return nil, "", err
-	}
+type Platform string
 
-	for _, line := range lines {
-		if strings.HasPrefix(line, "R version") {
-			spl := strings.Split(line, " ")
-			if len(spl) < 3 {
-				return nil, "", errors.New("error getting R version")
+func parseVersionData(data []byte) (*RVersion, Platform, error) {
+	lines := rp.ScanLines(data)
+
+	var plat []byte
+	var version *RVersion
+	var err error
+
+	scanner := bufio.NewScanner(bytes.NewReader(lines))
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if bytes.HasPrefix(line, []byte("R version")) {
+			version, err = VersionLine(line)
+			if err != nil {
+				return nil, "", err
 			}
-			rsp := strings.Split(spl[2], ".")
-			if len(rsp) == 3 {
-				maj, _ := strconv.Atoi(rsp[0])
-				min, _ := strconv.Atoi(rsp[1])
-				pat, _ := strconv.Atoi(rsp[2])
-				// this should now make it so in the future it will be set so should only need to shell out to R once
-				version = &RVersion{
-					Major: maj,
-					Minor: min,
-					Patch: pat,
-				}
-			} else {
-				return nil, "", errors.New("error getting R version")
+			// bail if platform is already set
+			if len(plat) > 0 {
+				break
 			}
-		} else if strings.HasPrefix(line, "Platform:") {
-			rsp := strings.Split(line, " ")
+		} else if bytes.HasPrefix(line, []byte("Platform:")) {
+			rsp := bytes.Split(line, []byte(" "))
 			if len(rsp) > 0 {
-				platform = strings.Trim(rsp[1], " ")
+				plat = bytes.Trim(rsp[1], " ")
+				// bail if version is already set
+				if version != nil {
+					break
+				}
 			} else {
 				return nil, "", errors.New("error getting R Platform")
 			}
 		}
 	}
 
-	return version, platform, nil
+	return version, Platform(plat), nil
 }
 
 // LibPathsEnv returns the library formatted in the style to be set as an environment variable.
@@ -136,4 +142,33 @@ func (rs RSettings) LibPathsEnv() (string, bool) {
 	}
 
 	return strings.Join(rs.LibPaths, ":"), true
+}
+
+// VersionLine reads a line starting with "R Version" and parses out the version
+// information.
+func VersionLine(line []byte) (*RVersion, error) {
+	spl := bytes.Split(line, []byte(" "))
+	if len(spl) < 3 {
+		return nil, errors.New("error getting R version")
+	}
+
+	semvers := bytes.Split(spl[2], []byte("."))
+	if len(semvers) == 3 {
+		var err error
+		version := RVersion{}
+
+		if version.Major, err = strconv.Atoi(string(semvers[0])); err != nil {
+			return nil, fmt.Errorf("couldn't parse major: %w", err)
+		}
+		if version.Minor, err = strconv.Atoi(string(semvers[1])); err != nil {
+			return nil, fmt.Errorf("couldn't parse minor: %w", err)
+		}
+		if version.Patch, err = strconv.Atoi(string(semvers[2])); err != nil {
+			return nil, fmt.Errorf("couldn't parse patch: %w", err)
+		}
+
+		return &version, nil
+	}
+
+	return nil, errors.New("error getting R version")
 }

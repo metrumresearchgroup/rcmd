@@ -1,60 +1,35 @@
 package rp
 
 import (
-	"bufio"
-	"bytes"
-	"io"
-	"sync"
+	"github.com/metrumresearchgroup/filter"
 
-	"github.com/metrumresearchgroup/rcmd/v2/writers"
+	"github.com/metrumresearchgroup/rcmd/v2/filters"
 )
 
 // ScanLines scans lines from Rscript output and returns an array with
 // the line numbers removed and whitespace trimmed.
-func ScanLines(b []byte) ([]string, error) {
-	return ScanROutput(b, false)
+func ScanLines(b []byte) []byte {
+	return NewROutputFilter(false)(b)
 }
 
-// ScanROutput scans lines from RScript output and returns an array with
+// OutputOnly retrieves lines without > from interactive sessions.
+func OutputOnly(b []byte) []byte {
+	return NewROutputFilter(true)(b)
+}
+
+// NewROutputFilter scans lines from RScript output and returns an array with
 // the line numbers removed, whitespace trimmed, and (optionally)
 // with all input-like lines (which start with ">") excluded.
-func ScanROutput(b []byte, outputOnly bool) ([]string, error) {
-	if !bytes.HasSuffix(b, []byte{'\n'}) {
-		b = append(b, '\n')
-	}
-	var fns []writers.FilterFunc
-	if outputOnly {
-		fns = append(fns, writers.InputFilter)
-	}
-	fns = append(fns, writers.LineNumberStripper)
-	fns = append(fns, bytes.TrimSpace)
-
-	r, w := io.Pipe()
-
-	var lines []string
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		scanner := bufio.NewScanner(r)
-		for scanner.Scan() {
-			lines = append(lines, scanner.Text())
+func NewROutputFilter(outputOnly bool) func([]byte) []byte {
+	return func(b []byte) []byte {
+		var c filter.Chain
+		if outputOnly {
+			c = append(c, filters.DropInput)
 		}
-		wg.Done()
-	}()
+		c = append(c, filters.LineNumberStripper)
 
-	filter := writers.NewFilter(w, fns...)
+		f := filter.NewFlow(c)
 
-	_, err := filter.Write(b)
-	if err != nil {
-		return nil, err
+		return f.Apply(b)
 	}
-
-	err = filter.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	wg.Wait()
-
-	return lines, nil
 }
