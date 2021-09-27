@@ -1,22 +1,24 @@
-package rp
+package rp_test
 
 import (
 	"testing"
 
 	"github.com/metrumresearchgroup/wrapt"
+
+	. "github.com/metrumresearchgroup/rcmd/v2/rp"
 )
 
-func TestLineScanning(t *testing.T) {
+func TestLineScanning(tt *testing.T) {
 	var installArgsTests = []struct {
+		name     string
 		in       []byte
 		fn       func([]byte) []byte
 		expected []byte
-		context  string
 	}{
 		{
 			in:       []byte("[1] line 1 info"),
-			expected: []byte("line 1 info\n"),
-			context:  "simplest",
+			expected: []byte("line 1 info"),
+			name:     "simplest",
 		},
 		{
 			in: []byte(`
@@ -26,13 +28,13 @@ func TestLineScanning(t *testing.T) {
 `),
 			fn:       OutputOnly,
 			expected: []byte("4\n"),
-			context:  "simplest",
+			name:     "simplest",
 		},
 		{
 			in: []byte(`[1] line 1  
 [2]	line 2  	`),
-			expected: []byte("line 1\nline 2\n"),
-			context:  "two lines with whitespace",
+			expected: []byte("line 1\nline 2"),
+			name:     "two lines with whitespace",
 		},
 		{
 			in: []byte(`[1] line 1  
@@ -40,11 +42,11 @@ func TestLineScanning(t *testing.T) {
 [3]
 `),
 			expected: []byte("line 1\nline 2\n"),
-			context:  "two lines with trailing new lines",
+			name:     "two lines with trailing new lines",
 		},
 	}
 	for _, test := range installArgsTests {
-		t.Run(test.context, func(tt *testing.T) {
+		tt.Run(test.name, func(tt *testing.T) {
 			t := wrapt.WrapT(tt)
 
 			if test.fn == nil {

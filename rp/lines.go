@@ -1,8 +1,6 @@
 package rp
 
 import (
-	"bytes"
-
 	"github.com/metrumresearchgroup/filter"
 
 	"github.com/metrumresearchgroup/rcmd/v2/filters"
@@ -24,16 +22,14 @@ func OutputOnly(b []byte) []byte {
 // with all input-like lines (which start with ">") excluded.
 func NewROutputFilter(outputOnly bool) func([]byte) []byte {
 	return func(b []byte) []byte {
-		if !bytes.HasSuffix(b, []byte{'\n'}) {
-			b = append(b, '\n')
-		}
-
-		var fns filter.Funcs
+		var c filter.Chain
 		if outputOnly {
-			fns = append(fns, filters.DropInput)
+			c = append(c, filters.DropInput)
 		}
-		fns = append(fns, filters.LineNumberStripper)
+		c = append(c, filters.LineNumberStripper)
 
-		return fns.Apply(b)
+		f := filter.NewFlow(c)
+
+		return f.Apply(b)
 	}
 }

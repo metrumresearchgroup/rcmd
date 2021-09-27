@@ -15,10 +15,8 @@ func NewPrefixFilter(pfx string) func([]byte) []byte {
 	return func(bs []byte) []byte {
 		buf := bytes.Buffer{}
 
-		if len(pfx) > 0 {
-			buf.WriteString(pfx)
-			buf.WriteByte(' ')
-		}
+		buf.WriteString(pfx)
+		buf.WriteByte(' ')
 		buf.Write(bs)
 
 		return buf.Bytes()

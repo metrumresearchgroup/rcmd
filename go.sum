@@ -28,10 +28,8 @@ github.com/metrumresearchgroup/command v0.1.0 h1:5td8ARt+uMGH7Um99b0DP+j2BZC/d2K
 github.com/metrumresearchgroup/command v0.1.0/go.mod h1:72QTkbMCU+Jd1irJc9eYmafKhrniFi50RydnB6rqacs=
 github.com/metrumresearchgroup/environ v0.0.1 h1:sYu58eHZ/KdFFkl/SrYFT36cw6IRDdVHWxzF+/94HcY=
 github.com/metrumresearchgroup/environ v0.0.1/go.mod h1:Zx7pp9lB9kQ/WmS++Y3k2nUfcUAhIeqYKGFtir7VXlI=
-github.com/metrumresearchgroup/filter v0.0.1 h1:ph6VCifiIJjdQAfo2rwGbz1agSqFpGzPYmvOTMkeIKU=
-github.com/metrumresearchgroup/filter v0.0.1/go.mod h1:ervFT8PpzyShESbner4lQGa8fTtn7WTu70E6WrbKW7A=
-github.com/metrumresearchgroup/filter v0.0.2-0.20210910160112-215e6274bdec h1:dEEsd49EphtC4IPq5oDrapp+AQKI/GCkn1FsPuISI5s=
-github.com/metrumresearchgroup/filter v0.0.2-0.20210910160112-215e6274bdec/go.mod h1:ervFT8PpzyShESbner4lQGa8fTtn7WTu70E6WrbKW7A=
+github.com/metrumresearchgroup/filter v0.0.3 h1:Aalore0/UWI1OwZUWWLrwCn5KFeZAH3r1CnrWMNbDVQ=
+github.com/metrumresearchgroup/filter v0.0.3/go.mod h1:ervFT8PpzyShESbner4lQGa8fTtn7WTu70E6WrbKW7A=
 github.com/metrumresearchgroup/wrapt v0.0.2 h1:e6Y4OlxLH72CHTkBR2ESdnk7ZZa8zeg6wL+Nus2AQ84=
 github.com/metrumresearchgroup/wrapt v0.0.2/go.mod h1:9Ubjd80vx7KMhbLFJug3EF0poD92KLlfuzadIPUmBK4=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
